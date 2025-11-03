@@ -28,6 +28,7 @@ builder.Services
     .AddGraphQLServer()
     .AddQueryType<EnterpriseGradeInventoryAPI.GraphQL.Query>()
     .AddMutationType<EnterpriseGradeInventoryAPI.GraphQL.Mutation>();
+    
 
 var app = builder.Build();
 

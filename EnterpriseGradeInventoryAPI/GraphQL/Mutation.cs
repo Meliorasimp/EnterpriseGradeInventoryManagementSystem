@@ -1,56 +1,17 @@
-using EnterpriseGradeInventoryAPI.Data;
-using EnterpriseGradeInventoryAPI.Models;
-using Microsoft.AspNetCore.Identity;
+using HotChocolate.Types;
+using EnterpriseGradeInventoryAPI.GraphQL.Mutations;
 
 namespace EnterpriseGradeInventoryAPI.GraphQL
 {
-  public class Mutation
+  public class Mutation : ObjectType
   {
-    // Register a new user 
-    public async Task<UserPayload> registerUser([Service] ApplicationDbContext context, string firstname, string lastname, string email, string password)
+    protected override void Configure(IObjectTypeDescriptor descriptor)
     {
-      try
-      {
-        // Check if user already exists
-        var existingUser = context.Users.FirstOrDefault(u => u.Email == email);
-        if (existingUser != null)
-        {
-          throw new GraphQLException("User with this email already exists");
-        }
+      descriptor.Name("Mutation");
 
-        var passwordHasher = new PasswordHasher<User>();
-        var user = new User
-        {
-          FirstName = firstname,
-          LastName = lastname,
-          Email = email,
-          PasswordHash = passwordHasher.HashPassword(null!, password)
-        };
-
-        context.Users.Add(user);
-        await context.SaveChangesAsync();
-        return new UserPayload
-        {
-          Id = user.Id,
-          Firstname = user.FirstName,
-          Lastname = user.LastName,
-          Email = user.Email
-        };
-      }
-      catch (Exception ex)
-      {
-        throw new GraphQLException($"Registration failed: {ex.Message}");
-      }
+      descriptor.Field<UserMutation>(t => t.registerUser(default!, default!, default!, default!, default!))
+        .Name("registerUser")
+        .Description("Register a new User");  
     }
   }
-
-  // DTO for GraphQL response
-  public class UserPayload
-  {
-    public int Id { get; set; }
-    public string Firstname { get; set; } = string.Empty;
-    public string Lastname { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-  }
-
 }
