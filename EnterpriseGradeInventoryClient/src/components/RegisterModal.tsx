@@ -8,6 +8,10 @@ import {
   setConfirmPassword,
 } from "../store/RegisterSlice";
 import type { RootState } from "../store";
+import type React from "react";
+import { useMutation } from "@apollo/client/react";
+import { REGISTER_USER } from "../gql/mutations/registerMutation";
+
 const RegisterModal = () => {
   const dispatch = useDispatch();
   const firstname = useSelector((state: RootState) => state.register.firstName);
@@ -18,8 +22,40 @@ const RegisterModal = () => {
     (state: RootState) => state.register.confirmPassword
   );
 
+  const [registerUser, { data, loading, error }] = useMutation(REGISTER_USER);
+
   const handleClose = () => {
     dispatch(setIsRegisterModalOpen(false));
+  };
+
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    if (!firstname || !lastname || !email || !password) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const Response = await registerUser({
+        variables: {
+          input: {
+            firstName: firstname,
+            lastName: lastname,
+            email,
+            password,
+          },
+        },
+      });
+
+      console.log("User registered successfully:", Response.data);
+    } catch (error) {
+      console.error("Error registering user:", error);
+    }
   };
 
   return (
@@ -35,7 +71,7 @@ const RegisterModal = () => {
           <span className="text-lime-500">Organize smarter</span> - start your
           free account
         </h1>
-        <form className="flex flex-col gap-y-4">
+        <form className="flex flex-col gap-y-4" onSubmit={handleRegisterSubmit}>
           <div className="flex flex-row gap-x-4">
             <div className="flex flex-col w-1/2">
               <h1 className="text-sm text-gray-700">First name*</h1>

@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using EnterpriseGradeInventoryAPI.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +19,9 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddGraphQLServer().AddQueryType<Query>();
 var app = builder.Build();
 
 
