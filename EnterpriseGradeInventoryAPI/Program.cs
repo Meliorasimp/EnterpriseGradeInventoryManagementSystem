@@ -12,16 +12,23 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowClient",
         policy => policy
-            .WithOrigins("http://localhost:5173")
+            .WithOrigins("http://localhost:5173", "https://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod()
+            .AllowCredentials()
     );
 });
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-builder.Services.AddGraphQLServer().AddQueryType<Query>();
+
+// Configure GraphQL
+builder.Services
+    .AddGraphQLServer()
+    .AddQueryType<EnterpriseGradeInventoryAPI.GraphQL.Query>()
+    .AddMutationType<EnterpriseGradeInventoryAPI.GraphQL.Mutation>();
+
 var app = builder.Build();
 
 
@@ -36,5 +43,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowClient");
 
 app.UseHttpsRedirection();
+
+// Map GraphQL endpoint
+app.MapGraphQL("/graphql");
 
 app.Run();

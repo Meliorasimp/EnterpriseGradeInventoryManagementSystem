@@ -10,7 +10,7 @@ import {
 import type { RootState } from "../store";
 import type React from "react";
 import { useMutation } from "@apollo/client/react";
-import { REGISTER_USER } from "../gql/mutations/registerMutation";
+import RegisterUser from "../gql/mutations/registerMutation.gql";
 
 const RegisterModal = () => {
   const dispatch = useDispatch();
@@ -22,7 +22,7 @@ const RegisterModal = () => {
     (state: RootState) => state.register.confirmPassword
   );
 
-  const [registerUser, { data, loading, error }] = useMutation(REGISTER_USER);
+  const [registerUser] = useMutation(RegisterUser);
 
   const handleClose = () => {
     dispatch(setIsRegisterModalOpen(false));
@@ -43,18 +43,53 @@ const RegisterModal = () => {
     try {
       const Response = await registerUser({
         variables: {
-          input: {
-            firstName: firstname,
-            lastName: lastname,
-            email,
-            password,
-          },
+          firstname: firstname,
+          lastname: lastname,
+          email: email,
+          password: password,
         },
       });
 
       console.log("User registered successfully:", Response.data);
-    } catch (error) {
-      console.error("Error registering user:", error);
+
+      // Success - close modal
+      dispatch(setIsRegisterModalOpen(false));
+      alert("Registration successful! Welcome aboard!");
+    } catch (err: unknown) {
+      console.error("Registration error:", err);
+
+      const apolloError = err as {
+        graphQLErrors?: Array<{ message: string }>;
+        networkError?: { message: string; statusCode?: number };
+      };
+
+      // Handle GraphQL errors (validation, business logic errors)
+      if (apolloError.graphQLErrors && apolloError.graphQLErrors.length > 0) {
+        const errorMessages = apolloError.graphQLErrors
+          .map((error) => error.message)
+          .join("\n");
+        alert(`Registration failed:\n${errorMessages}`);
+        return;
+      }
+
+      // Handle network errors
+      if (apolloError.networkError) {
+        console.error("Network error:", apolloError.networkError);
+        const statusCode = apolloError.networkError.statusCode;
+        if (statusCode === 400) {
+          alert("Registration failed: Please check your input data.");
+        } else if (statusCode && statusCode >= 500) {
+          alert("Server error: Please try again later.");
+        } else {
+          alert(`Network error: ${apolloError.networkError.message}`);
+        }
+        return;
+      }
+
+      // Handle other errors
+      alert(
+        "An unexpected error occurred during registration. Please try again."
+      );
     }
   };
 
@@ -64,7 +99,7 @@ const RegisterModal = () => {
       onClick={handleClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-lg p-6 w-3/5 z-50"
+        className="bg-white rounded-2xl shadow-lg p-10 w-3/5 z-50"
         onClick={(e) => e.stopPropagation()}
       >
         <h1 className="text-2xl font-bold border-b border-gray-300 pb-4 mb-4 w-full">
