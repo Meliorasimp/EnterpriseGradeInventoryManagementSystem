@@ -58,10 +58,12 @@ const RegisterModal = () => {
       alert("Registration successful! Welcome aboard!");
     } catch (err: unknown) {
       console.error("Registration error:", err);
+      console.error("Full error object:", JSON.stringify(err, null, 2));
 
       const apolloError = err as {
         graphQLErrors?: Array<{ message: string }>;
         networkError?: { message: string; statusCode?: number };
+        message?: string;
       };
 
       // Handle GraphQL errors (validation, business logic errors)
@@ -88,8 +90,9 @@ const RegisterModal = () => {
       }
 
       // Handle other errors
+      const fallbackMessage = apolloError.message || "Unknown error occurred";
       alert(
-        "An unexpected error occurred during registration. Please try again."
+        `An unexpected error occurred during registration: ${fallbackMessage}\nPlease check the console for more details.`
       );
     }
   };

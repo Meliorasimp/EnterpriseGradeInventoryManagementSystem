@@ -9,9 +9,6 @@ start "Backend" cmd /k "cd /d C:\Users\melio\OneDrive\Documents\Website Projects
 REM Start the frontend (React/Vite app) in another terminal window
 start "Frontend" cmd /k "cd /d C:\Users\melio\OneDrive\Documents\Website Projects\EnterpriseGradeInventoryManagementSystem\EnterpriseGradeInventoryClient && npm run dev"
 
-REM
-start http://localhost:5173
-
 echo ====================================
 echo Backend and Frontend are starting...
 echo ====================================

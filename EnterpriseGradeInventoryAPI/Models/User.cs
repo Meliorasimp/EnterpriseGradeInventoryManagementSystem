@@ -10,6 +10,8 @@ namespace EnterpriseGradeInventoryAPI.Models
         required
         public string Email { get; set; }
         required
-        public string PasswordHash { get; set; }
+        public string PasswordHash
+        { get; set; }
+        public string Role { get; set; } = "Pending"; // Default role is "Pending"
     }
 }

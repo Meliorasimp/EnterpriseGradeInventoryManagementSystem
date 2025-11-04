@@ -3,12 +3,13 @@ using EnterpriseGradeInventoryAPI.Models;
 using HotChocolate;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using static EnterpriseGradeInventoryAPI.GraphQL.Mutations.UserMutation;
 
 namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
 {
   public class LoginMutation
   {
-    public async Task<User> loginUser([Service] ApplicationDbContext context, string loginemail, string loginpassword)
+    public async Task<UserPayload> loginUser([Service] ApplicationDbContext context, string loginemail, string loginpassword)
     {
       var passwordHasher = new PasswordHasher<User>();
       var user = await context.Users.FirstOrDefaultAsync(u => u.Email == loginemail);
@@ -21,7 +22,14 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
       {
         throw new GraphQLException("Invalid email or password");
       }
-      return user;
+      
+      return new UserPayload
+      {
+        Id = user.Id,
+        FirstName = user.FirstName,
+        LastName = user.LastName,
+        Email = user.Email
+      };
     }
   }
 }

@@ -1,6 +1,7 @@
 using EnterpriseGradeInventoryAPI.Data;
 using EnterpriseGradeInventoryAPI.Models;
 using Microsoft.AspNetCore.Identity;
+using HotChocolate;
 
 namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
 {
@@ -32,8 +33,8 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
         return new UserPayload
         {
           Id = user.Id,
-          Firstname = user.FirstName,
-          Lastname = user.LastName,
+          FirstName = user.FirstName,
+          LastName = user.LastName,
           Email = user.Email
         };
       }
@@ -47,9 +48,16 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
   // DTO for GraphQL response
   public class UserPayload
   {
+    [GraphQLName("id")]
     public int Id { get; set; }
-    public string Firstname { get; set; } = string.Empty;
-    public string Lastname { get; set; } = string.Empty;
+    
+    [GraphQLName("firstName")]
+    public string FirstName { get; set; } = string.Empty;
+    
+    [GraphQLName("lastName")]
+    public string LastName { get; set; } = string.Empty;
+    
+    [GraphQLName("email")]
     public string Email { get; set; } = string.Empty;
   }
 
