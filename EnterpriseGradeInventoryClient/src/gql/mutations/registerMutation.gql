@@ -14,8 +14,8 @@ mutation RegisterUser(
   ) {
     # The fields that we want to get receive after registering a user
     id
-    firstname
-    lastname
+    firstName
+    lastName
     email
   }
 }

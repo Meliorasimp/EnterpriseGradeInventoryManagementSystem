@@ -1,0 +1,8 @@
+mutation LoginUser($loginemail: String!, $loginpassword: String!) {
+  loginUser(loginemail: $loginemail, loginpassword: $loginpassword) {
+    id
+    firstName
+    lastName
+    email
+  }
+}

@@ -11,6 +11,7 @@ import type { RootState } from "../store";
 import type React from "react";
 import { useMutation } from "@apollo/client/react";
 import RegisterUser from "../gql/mutations/registerMutation.gql";
+import { switchToLoginModal } from "../store/InteractionSlice";
 
 const RegisterModal = () => {
   const dispatch = useDispatch();
@@ -167,7 +168,12 @@ const RegisterModal = () => {
           </h1>
           <h1 className="text-xs text-gray-500 mt-4 text-center">
             Already have an account?{" "}
-            <span className="text-lime-500 cursor-pointer">Login</span>
+            <span
+              className="text-lime-500 cursor-pointer"
+              onClick={() => dispatch(switchToLoginModal())}
+            >
+              Login
+            </span>
           </h1>
         </section>
       </div>

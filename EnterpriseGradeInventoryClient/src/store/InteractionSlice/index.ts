@@ -16,9 +16,21 @@ const interactionSlice = createSlice({
     setIsLoginModalOpen(state, action) {
       state.isLoginModalOpen = action.payload;
     },
+    switchToLoginModal(state) {
+      state.isRegisterModalOpen = false;
+      state.isLoginModalOpen = true;
+    },
+    switchToRegisterModal(state) {
+      state.isRegisterModalOpen = true;
+      state.isLoginModalOpen = false;
+    },
   },
 });
 
-export const { setIsRegisterModalOpen, setIsLoginModalOpen } =
-  interactionSlice.actions;
+export const {
+  setIsRegisterModalOpen,
+  setIsLoginModalOpen,
+  switchToLoginModal,
+  switchToRegisterModal,
+} = interactionSlice.actions;
 export const interactionReducer = interactionSlice.reducer;
