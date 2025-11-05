@@ -1,6 +1,7 @@
 import { type RouteObject } from "react-router-dom";
 import Landingpage from "../pages/Landingpage";
 import Dashboard from "../pages/Dashboard";
+import Inventory from "../pages/Inventory";
 const Router: RouteObject[] = [
   {
     path: "/",
@@ -9,6 +10,10 @@ const Router: RouteObject[] = [
   {
     path: "/dashboard",
     element: <Dashboard />,
+  },
+  {
+    path: "/inventory",
+    element: <Inventory />,
   },
 ];
 

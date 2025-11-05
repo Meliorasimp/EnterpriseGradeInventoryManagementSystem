@@ -143,7 +143,7 @@ const Navbar = () => {
           {MainSection.map((item, index) => (
             <Link
               key={index}
-              className="flex items-center gap-x-2 px-6 w-full cursor-pointer py-3 hover:bg-lime-500 hover:text-white transition-all duration-100"
+              className="flex items-center gap-x-2 px-6 w-full cursor-pointer py-3 hover:bg-lime-400 hover:text-white transition-all duration-100"
               to={item.link}
             >
               <img src={item.icon} alt={item.alticon} className="w-6 h-6" />
