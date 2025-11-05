@@ -25,10 +25,24 @@ echo Enter your commit message:
 
 set /p commitMessage=
 
+git switch feature
+
 git add .
 
 git commit -m "%commitMessage%"
 
 git push origin feature
+
+echo Changes pushed successfully!
+echo Do you want to Merge into main branch? (y/n)
+set /p mergeChoice=
+if /i "%mergeChoice%"=="y" (
+    git switch main
+    git merge feature
+    git push origin main
+    echo Merged into main branch and pushed successfully!
+) else (
+    echo Merge skipped.
+)
 
 pause
