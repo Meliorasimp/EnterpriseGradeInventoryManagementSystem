@@ -4,5 +4,6 @@ mutation LoginUser($loginemail: String!, $loginpassword: String!) {
     firstName
     lastName
     email
+    token
   }
 }

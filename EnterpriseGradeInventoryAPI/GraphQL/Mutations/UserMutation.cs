@@ -44,7 +44,6 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
       }
     }
   }
-
   // DTO for GraphQL response
   public class UserPayload
   {
@@ -56,9 +55,10 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
     
     [GraphQLName("lastName")]
     public string LastName { get; set; } = string.Empty;
-    
+
     [GraphQLName("email")]
     public string Email { get; set; } = string.Empty;
+    
   }
 
 }

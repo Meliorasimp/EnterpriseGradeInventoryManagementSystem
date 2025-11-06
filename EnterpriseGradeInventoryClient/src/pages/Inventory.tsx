@@ -1,5 +1,19 @@
 import Navbar from "../components/Navbar";
+import { lazy, Suspense } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { setIsInventoryModalOpen } from "../store/InteractionSlice";
+import { type RootState } from "../store";
 const Inventory = () => {
+  const dispatch = useDispatch();
+  const isInventoryModalOpen = useSelector(
+    (state: RootState) => state.interaction.isInventoryModalOpen
+  );
+  const handleAddInventoryClick = () => {
+    dispatch(setIsInventoryModalOpen(true));
+  };
+  const AddInventoryModal = lazy(
+    () => import("../components/AddInventoryModal")
+  );
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />
@@ -160,7 +174,10 @@ const Inventory = () => {
                   <option value="">Earth</option>
                   <option value="">Venus</option>
                 </select>
-                <button className="border flex items-center p-2 border-gray-300 text-gray-600 cursor-pointer rounded-sm">
+                <button
+                  className="border flex items-center p-2 border-gray-300 text-gray-600 cursor-pointer rounded-sm"
+                  onClick={handleAddInventoryClick}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
@@ -344,108 +361,19 @@ const Inventory = () => {
                       October 26, 2023
                     </td>
                   </tr>
-                  <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      SKU-001
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Product A
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Electronics
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Taytay, Rizal Starstone Street
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      19000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      3000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      By Kilograms
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      20
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      38000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      October 26, 2023
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      SKU-001
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Product A
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Electronics
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Taytay, Rizal Starstone Street
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      19000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      3000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      By Kilograms
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      20
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      38000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      October 26, 2023
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      SKU-001
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Product A
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Electronics
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Taytay, Rizal Starstone Street
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      19000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      3000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      By Kilograms
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      20
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      38000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      October 26, 2023
-                    </td>
-                  </tr>
                 </tbody>
               </table>
             </div>
           </div>
         </div>
       </main>
+      {isInventoryModalOpen && (
+        <Suspense
+          fallback={<div className="inset-0 absolute z-10">Loading...</div>}
+        >
+          <AddInventoryModal />
+        </Suspense>
+      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ import {
 import type { RootState } from "../store";
 import { useMutation } from "@apollo/client/react";
 import LoginUser from "../gql/mutations/loginMutation.gql";
+import { type LoginUserResponse } from "../types/loginuserresponse";
 const LoginModal = () => {
   const dispatch = useDispatch();
   const handleClose = () => {
@@ -18,7 +19,7 @@ const LoginModal = () => {
     (state: RootState) => state.login.loginpassword
   );
 
-  const [loginUser] = useMutation(LoginUser);
+  const [loginUser] = useMutation<LoginUserResponse>(LoginUser);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +36,12 @@ const LoginModal = () => {
       if (response) {
         dispatch(setIsLoginModalOpen(false));
         dispatch(clearLoginState());
+        if (response.data?.loginUser?.token) {
+          console.log("Storing token:", response.data.loginUser.token);
+          localStorage.setItem("token", response.data.loginUser.token);
+        } else {
+          console.warn("No token received upon login.");
+        }
       }
       console.log("Login successful:", response);
     } catch (err: unknown) {

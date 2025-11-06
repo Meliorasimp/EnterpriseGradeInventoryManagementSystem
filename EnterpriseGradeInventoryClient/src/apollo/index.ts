@@ -7,6 +7,9 @@ const client = new ApolloClient({
     fetchOptions: {
       mode: "cors",
     },
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+    },
   }),
   cache: new InMemoryCache(),
 });

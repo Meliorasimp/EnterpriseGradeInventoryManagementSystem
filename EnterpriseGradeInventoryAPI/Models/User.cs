@@ -13,5 +13,7 @@ namespace EnterpriseGradeInventoryAPI.Models
         public string PasswordHash
         { get; set; }
         public string Role { get; set; } = "Pending"; // Default role is "Pending"
+        //One User can Have Many Inventories (One to Many Relationship)
+        public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
     }
 }
