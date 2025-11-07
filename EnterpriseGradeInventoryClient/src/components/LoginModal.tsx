@@ -9,8 +9,11 @@ import type { RootState } from "../store";
 import { useMutation } from "@apollo/client/react";
 import LoginUser from "../gql/mutations/loginMutation.gql";
 import { type LoginUserResponse } from "../types/loginuserresponse";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 const LoginModal = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleClose = () => {
     dispatch(setIsLoginModalOpen(false));
   };
@@ -39,6 +42,10 @@ const LoginModal = () => {
         if (response.data?.loginUser?.token) {
           console.log("Storing token:", response.data.loginUser.token);
           localStorage.setItem("token", response.data.loginUser.token);
+          console.log("Storing userId:", response.data.loginUser.id);
+          localStorage.setItem("userId", response.data.loginUser.id.toString());
+          navigate("/dashboard");
+          toast.success("Login successful! Welcome back!");
         } else {
           console.warn("No token received upon login.");
         }

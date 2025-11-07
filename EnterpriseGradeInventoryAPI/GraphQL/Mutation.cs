@@ -15,6 +15,9 @@ namespace EnterpriseGradeInventoryAPI.GraphQL
       descriptor.Field<LoginMutation>(t => t.loginUser(default!, default!, default!))
         .Name("loginUser")
         .Description("Login an existing User");
+      descriptor.Field<InventoryMutation>(t => t.addInventory(default!, default!, default!))
+        .Name("addInventory")
+        .Description("Add a new Inventory Item");
     }
   }
 }
