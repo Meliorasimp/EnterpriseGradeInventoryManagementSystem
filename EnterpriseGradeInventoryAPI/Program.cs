@@ -28,6 +28,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services
     .AddGraphQLServer()
     .AddQueryType<EnterpriseGradeInventoryAPI.GraphQL.Query>()
+    .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Queries.InventoryQuery>()
     .AddMutationType<EnterpriseGradeInventoryAPI.GraphQL.Mutation>();
     
 

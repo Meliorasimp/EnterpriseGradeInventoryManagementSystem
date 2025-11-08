@@ -13,7 +13,7 @@ namespace EnterpriseGradeInventoryAPI.Models
     public int CostPerUnit { get; set; }
     public int TotalValue { get; set; }
     public DateTime LastRestocked { get; set; }
-    //Foreign Key to User
+    //Foreign Key to User Model
     public int UserId { get; set; }
     //Navigation Property of User Model
     public User User { get; set; } = null!;

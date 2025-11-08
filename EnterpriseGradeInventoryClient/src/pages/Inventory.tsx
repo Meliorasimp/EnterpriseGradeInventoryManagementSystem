@@ -3,17 +3,64 @@ import { lazy, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setIsInventoryModalOpen } from "../store/InteractionSlice";
 import { type RootState } from "../store";
+import { useQuery } from "@apollo/client/react";
+import GetAllInventoryItems from "../gql/query/inventoryQuery.gql";
+import {
+  type FetchInventoryResponse,
+  type SearchInventoryResponse,
+} from "../types/inventory";
+import { FormatDate } from "../Utils";
+import Search from "../gql/query/searchInventoryQuery.gql";
+import { setDataSearch } from "../store/Inventory";
+import useDebounce from "../hooks/useDebounce";
+
 const Inventory = () => {
   const dispatch = useDispatch();
+  const {
+    data: inventoryData,
+    loading: inventoryLoading,
+    error: inventoryError,
+  } = useQuery<FetchInventoryResponse>(GetAllInventoryItems);
+  console.log(
+    "Fetched inventory data:",
+    inventoryData,
+    inventoryLoading,
+    inventoryError
+  );
+  const dataSearch = useSelector((state: RootState) => state.search.dataSearch);
+
+  // Debounce the search term with 400ms delay to avoid excessive API calls
+  const debouncedSearchTerm = useDebounce(dataSearch, 400);
+
   const isInventoryModalOpen = useSelector(
     (state: RootState) => state.interaction.isInventoryModalOpen
   );
+  const { data: searchData } = useQuery<SearchInventoryResponse>(Search, {
+    variables: { searchTerm: debouncedSearchTerm },
+    skip: !debouncedSearchTerm || debouncedSearchTerm.trim() === "", // Only run when there's a search term
+  });
+  console.log("Search results:", searchData);
+  console.log("Search term:", dataSearch);
+  console.log("Debounced search term:", debouncedSearchTerm);
+  console.log("Search items:", searchData?.itemBySearchTerm);
   const handleAddInventoryClick = () => {
     dispatch(setIsInventoryModalOpen(true));
+  };
+
+  // Handle search input change
+  const handleDataSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Dispatch action to update search term in Redux store
+    dispatch(setDataSearch(e.target.value));
   };
   const AddInventoryModal = lazy(
     () => import("../components/AddInventoryModal")
   );
+  const formatted =
+    (inventoryData?.totalInventoryValue
+      ? inventoryData.totalInventoryValue / 1_000_000
+      : 0
+    ).toFixed(2) + "M";
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />
@@ -30,9 +77,11 @@ const Inventory = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600 mb-1">
-                    Total Asset Value
+                    Total Inventory Value
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">$1.2M</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    &#8369;{formatted}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
                   <svg
@@ -58,7 +107,9 @@ const Inventory = () => {
                   <p className="text-sm font-medium text-gray-600 mb-1">
                     In Stock Items
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">120</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {inventoryData?.inStockItems}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
                   <svg
@@ -84,7 +135,9 @@ const Inventory = () => {
                   <p className="text-sm font-medium text-gray-600 mb-1">
                     Low Stock Items
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">21</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {inventoryData?.lowStockItems}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
                   <svg
@@ -110,7 +163,9 @@ const Inventory = () => {
                   <p className="text-sm font-medium text-gray-600 mb-1">
                     No Stock Items
                   </p>
-                  <p className="text-3xl font-bold text-gray-900">$1.2M</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {inventoryData?.outOfStockItems}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
                   <svg
@@ -138,6 +193,8 @@ const Inventory = () => {
                   type="text"
                   className="border border-gray-300 rounded-sm p-1"
                   placeholder="Search..."
+                  value={dataSearch}
+                  onChange={handleDataSearch}
                 />
               </div>
               <div className="flex flex-row space-x-4">
@@ -151,17 +208,6 @@ const Inventory = () => {
                   <option value="">Furniture</option>
                   <option value="">Clothing</option>
                   <option value="">Toys</option>
-                </select>
-                <select
-                  name=""
-                  id=""
-                  className="border border-gray-300 rounded-sm p-1 text-gray-600"
-                >
-                  <option value="">Sort by</option>
-                  <option value="">Name: A to Z</option>
-                  <option value="">Name: Z to A</option>
-                  <option value="">Stock: Low to High</option>
-                  <option value="">Stock: High to Low</option>
                 </select>
                 <select
                   name=""
@@ -232,136 +278,48 @@ const Inventory = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      SKU-001
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Product A
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Electronics
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Taytay, Rizal Starstone Street
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      19000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      3000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      By Kilograms
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      20
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      38000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      October 26, 2023
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      SKU-001
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Product A
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Electronics
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Taytay, Rizal Starstone Street
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      19000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      3000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      By Kilograms
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      20
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      38000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      October 26, 2023
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      SKU-001
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Product A
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Electronics
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Taytay, Rizal Starstone Street
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      19000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      3000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      By Kilograms
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      20
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      38000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      October 26, 2023
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      SKU-001
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Product A
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Electronics
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      Taytay, Rizal Starstone Street
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      19000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      3000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      By Kilograms
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      20
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      38000
-                    </td>
-                    <td className="text-left text-gray-500 pb-2 text-sm font-medium px-6 min-w-[200px]">
-                      October 26, 2023
-                    </td>
-                  </tr>
-                </tbody>
+                {inventoryLoading && <p>Loading...</p>}
+                {inventoryError && <p>Error loading inventory data.</p>}
+                {/* Show search results if search is active, otherwise show all inventory */}
+                {(debouncedSearchTerm && searchData?.itemBySearchTerm
+                  ? searchData.itemBySearchTerm
+                  : inventoryData?.inventoryItems || []
+                ).map((item) => (
+                  <tbody key={item.id}>
+                    <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
+                      <td className="text-left text-gray-500 text-sm font-medium px-6 min-w-[200px]">
+                        {item.itemSKU}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {item.productName}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {item.category}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {item.warehouseLocation}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px] ">
+                        {item.quantityInStock}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {item.reorderLevel}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {item.unitOfMeasure}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {item.costPerUnit}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {item.totalValue}
+                      </td>
+                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                        {FormatDate(item.lastRestocked)}
+                      </td>
+                    </tr>
+                  </tbody>
+                ))}
               </table>
             </div>
           </div>

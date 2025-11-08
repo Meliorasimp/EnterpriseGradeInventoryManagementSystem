@@ -37,7 +37,7 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
             ReorderLevel = item.ReorderLevel,
             UnitOfMeasure = item.UnitOfMeasure,
             CostPerUnit = item.CostPerUnit,
-            TotalValue = item.TotalValue,
+            TotalValue = item.QuantityInStock * item.CostPerUnit,
             UserId = int.Parse(userId),
             LastRestocked = DateTime.Now
           };

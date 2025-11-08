@@ -1,0 +1,15 @@
+query SearchInventory($searchTerm: String!) {
+  itemBySearchTerm(searchTerm: $searchTerm) {
+    id
+    itemSKU
+    productName
+    category
+    warehouseLocation
+    quantityInStock
+    reorderLevel
+    unitOfMeasure
+    costPerUnit
+    totalValue
+    lastRestocked
+  }
+}

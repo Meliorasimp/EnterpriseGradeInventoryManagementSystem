@@ -1,15 +1,31 @@
 import { useDispatch, useSelector } from "react-redux";
 import { setIsInventoryModalOpen } from "../store/InteractionSlice";
-import { addNewRow, removeRow, updateRow } from "../store/Inventory";
+import { addNewRow, removeRow, updateRow, clearAll } from "../store/Inventory";
 import { type AppDispatch, type RootState } from "../store";
 import { useMutation } from "@apollo/client/react";
 import AddInventory from "../gql/mutations/inventoryMutation.gql";
+import FetchInventory from "../gql/query/inventoryQuery.gql";
 import type React from "react";
 import { toast } from "sonner";
 
 const AddInventoryModal = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const [addInventory] = useMutation(AddInventory);
+  const [addInventory] = useMutation(AddInventory, {
+    refetchQueries: [
+      {
+        query: FetchInventory,
+      },
+    ],
+    awaitRefetchQueries: true, // Wait for refetch to complete before resolving the mutation
+    onCompleted: (data) => {
+      console.log("Inventory added successfully:", data);
+      toast.success("Inventory items added successfully!");
+    },
+    onError: (error) => {
+      console.error("Error adding inventory:", error);
+      toast.error("Failed to add inventory items. Please try again.");
+    },
+  });
   const inventoryRows = useSelector((state: RootState) => state.inventoryInput);
 
   const userId = localStorage.getItem("userId");
@@ -65,9 +81,7 @@ const AddInventoryModal = () => {
         reorderLevel: Number(row.reorderLevel),
         unitOfMeasure: row.unitOfMeasure,
         costPerUnit: Math.round(Number(row.costPerUnit) * 100), // Convert to cents to store as integer
-        totalValue: Math.round(
-          Number(row.quantityInStock) * Number(row.costPerUnit) * 100
-        ), // Calculate total value in cents
+        totalValue: 0,
       }));
 
       console.log("Transformed inventory:", transformedInventory);
@@ -79,10 +93,15 @@ const AddInventoryModal = () => {
         },
       });
       console.log("Inventory submission response:", response);
+
+      // Clear the form after successful submission
+      dispatch(clearAll());
+
+      // Close modal after successful submission
       handleClose();
-      toast.success("Inventory items added successfully!");
     } catch (err: unknown) {
       console.error("Inventory submission error:", err);
+      toast.error("Failed to add inventory items. Please try again.");
     }
   };
 

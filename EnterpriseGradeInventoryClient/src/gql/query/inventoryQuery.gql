@@ -1,0 +1,19 @@
+query GetInventoryDashboard {
+  inventoryItems {
+    id
+    itemSKU
+    productName
+    category
+    warehouseLocation
+    quantityInStock
+    reorderLevel
+    unitOfMeasure
+    costPerUnit
+    totalValue
+    lastRestocked
+  }
+  totalInventoryValue
+  inStockItems
+  lowStockItems
+  outOfStockItems
+}
