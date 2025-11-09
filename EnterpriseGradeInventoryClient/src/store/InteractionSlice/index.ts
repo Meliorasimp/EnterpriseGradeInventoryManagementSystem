@@ -8,6 +8,8 @@ const initialInteractionState: InteractionType = {
   isLoginModalOpen: false,
   //Inventory Modal State Logic
   isInventoryModalOpen: false,
+  //Warehouse Modal State Logic
+  isWarehouseModalOpen: false,
 };
 
 const interactionSlice = createSlice({
@@ -35,6 +37,10 @@ const interactionSlice = createSlice({
       state.isRegisterModalOpen = true;
       state.isLoginModalOpen = false;
     },
+    //Warehouse Modal Reducers
+    setIsWarehouseModalOpen(state, action) {
+      state.isWarehouseModalOpen = action.payload;
+    },
   },
 });
 
@@ -44,5 +50,6 @@ export const {
   setIsInventoryModalOpen,
   switchToLoginModal,
   switchToRegisterModal,
+  setIsWarehouseModalOpen,
 } = interactionSlice.actions;
 export const interactionReducer = interactionSlice.reducer;

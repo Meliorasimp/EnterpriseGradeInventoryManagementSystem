@@ -1,10 +1,15 @@
 import { useDispatch, useSelector } from "react-redux";
 import { setIsInventoryModalOpen } from "../store/InteractionSlice";
-import { addNewRow, removeRow, updateRow, clearAll } from "../store/Inventory";
+import {
+  addNewRow,
+  removeRow,
+  updateRow,
+  clearAll,
+} from "../store/InventorySlice";
 import { type AppDispatch, type RootState } from "../store";
 import { useMutation } from "@apollo/client/react";
 import AddInventory from "../gql/mutations/inventoryMutation.gql";
-import FetchInventory from "../gql/query/inventoryQuery.gql";
+import FetchInventory from "../gql/query/inventoryQuery/inventoryQuery.gql";
 import type React from "react";
 import { toast } from "sonner";
 
@@ -77,6 +82,7 @@ const AddInventoryModal = () => {
         productName: row.productName,
         category: row.category,
         warehouseLocation: row.warehouseLocation,
+        rackLocation: row.rackLocation,
         quantityInStock: Number(row.quantityInStock),
         reorderLevel: Number(row.reorderLevel),
         unitOfMeasure: row.unitOfMeasure,
@@ -131,6 +137,9 @@ const AddInventoryModal = () => {
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[200px]">
                     Warehouse Location
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[200px]">
+                    Rack Location
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[150px]">
                     Quantity in Stock
@@ -230,6 +239,23 @@ const AddInventoryModal = () => {
                           <option value="warehouse-c">
                             Warehouse C - Zone 1
                           </option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={row.rackLocation}
+                          onChange={(e) =>
+                            handleUpdateRow(
+                              row.id,
+                              "rackLocation",
+                              e.target.value
+                            )
+                          }
+                          className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
+                          required
+                        >
+                          <option value="">Select Location</option>
+                          <option value="aisle-1">Aisle 1</option>
                         </select>
                       </td>
                       <td className="px-4 py-3">

@@ -5,6 +5,7 @@ query GetInventoryDashboard {
     productName
     category
     warehouseLocation
+    rackLocation
     quantityInStock
     reorderLevel
     unitOfMeasure

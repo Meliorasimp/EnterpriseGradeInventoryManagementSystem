@@ -4,14 +4,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { setIsInventoryModalOpen } from "../store/InteractionSlice";
 import { type RootState } from "../store";
 import { useQuery } from "@apollo/client/react";
-import GetAllInventoryItems from "../gql/query/inventoryQuery.gql";
+import GetAllInventoryItems from "../gql/query/inventoryQuery/inventoryQuery.gql";
 import {
   type FetchInventoryResponse,
+  type SearchCategoryInventoryResponse,
   type SearchInventoryResponse,
 } from "../types/inventory";
 import { FormatDate } from "../Utils";
-import Search from "../gql/query/searchInventoryQuery.gql";
-import { setDataSearch } from "../store/Inventory";
+import Search from "../gql/query/inventoryQuery/searchInventoryQuery.gql";
+import SearchCategory from "../gql/query/inventoryQuery/searchByCategoryQuery.gql";
+import { setDataSearch, setCategorySearch } from "../store/InventorySlice";
 import useDebounce from "../hooks/useDebounce";
 
 const Inventory = () => {
@@ -21,16 +23,15 @@ const Inventory = () => {
     loading: inventoryLoading,
     error: inventoryError,
   } = useQuery<FetchInventoryResponse>(GetAllInventoryItems);
-  console.log(
-    "Fetched inventory data:",
-    inventoryData,
-    inventoryLoading,
-    inventoryError
-  );
-  const dataSearch = useSelector((state: RootState) => state.search.dataSearch);
 
-  // Debounce the search term with 400ms delay to avoid excessive API calls
+  const dataSearch = useSelector((state: RootState) => state.search.dataSearch);
+  const categorySearch = useSelector(
+    (state: RootState) => state.search.categorySearch
+  );
+
+  // Debounce both search terms to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(dataSearch, 400);
+  const debouncedCategorySearch = useDebounce(categorySearch, 300);
 
   const isInventoryModalOpen = useSelector(
     (state: RootState) => state.interaction.isInventoryModalOpen
@@ -39,10 +40,16 @@ const Inventory = () => {
     variables: { searchTerm: debouncedSearchTerm },
     skip: !debouncedSearchTerm || debouncedSearchTerm.trim() === "", // Only run when there's a search term
   });
-  console.log("Search results:", searchData);
-  console.log("Search term:", dataSearch);
-  console.log("Debounced search term:", debouncedSearchTerm);
-  console.log("Search items:", searchData?.itemBySearchTerm);
+
+  const { data: categoryData } = useQuery<SearchCategoryInventoryResponse>(
+    SearchCategory,
+    {
+      variables: { category: debouncedCategorySearch },
+      skip: !debouncedCategorySearch || debouncedCategorySearch.trim() === "", // Only run when there's a category selected
+    }
+  );
+  console.log("Category Data:", categoryData);
+
   const handleAddInventoryClick = () => {
     dispatch(setIsInventoryModalOpen(true));
   };
@@ -202,12 +209,15 @@ const Inventory = () => {
                   name=""
                   id=""
                   className="border border-gray-300 rounded-sm p-1 text-gray-600"
+                  value={categorySearch}
+                  onChange={(e) => dispatch(setCategorySearch(e.target.value))}
                 >
                   <option value="">Filter by Category</option>
-                  <option value="">Electronics</option>
-                  <option value="">Furniture</option>
-                  <option value="">Clothing</option>
-                  <option value="">Toys</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="furniture">Furniture</option>
+                  <option value="clothing">Clothing</option>
+                  <option value="toys">Toys</option>
+                  <option value="books">Books</option>
                 </select>
                 <select
                   name=""
@@ -259,6 +269,9 @@ const Inventory = () => {
                       Warehouse Location
                     </th>
                     <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
+                      Rack Location
+                    </th>
+                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
                       Quantity in Stock
                     </th>
                     <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
@@ -280,46 +293,62 @@ const Inventory = () => {
                 </thead>
                 {inventoryLoading && <p>Loading...</p>}
                 {inventoryError && <p>Error loading inventory data.</p>}
-                {/* Show search results if search is active, otherwise show all inventory */}
-                {(debouncedSearchTerm && searchData?.itemBySearchTerm
-                  ? searchData.itemBySearchTerm
-                  : inventoryData?.inventoryItems || []
-                ).map((item) => (
-                  <tbody key={item.id}>
-                    <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
-                      <td className="text-left text-gray-500 text-sm font-medium px-6 min-w-[200px]">
-                        {item.itemSKU}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {item.productName}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {item.category}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {item.warehouseLocation}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px] ">
-                        {item.quantityInStock}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {item.reorderLevel}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {item.unitOfMeasure}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {item.costPerUnit}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {item.totalValue}
-                      </td>
-                      <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                        {FormatDate(item.lastRestocked)}
-                      </td>
-                    </tr>
-                  </tbody>
-                ))}
+                {/* Show filtered results based on search and category filters */}
+                {(() => {
+                  // Priority: 1. Search results, 2. Category results, 3. All inventory
+                  let displayItems = [];
+
+                  if (debouncedSearchTerm && searchData?.itemBySearchTerm) {
+                    displayItems = searchData.itemBySearchTerm;
+                  } else if (
+                    debouncedCategorySearch &&
+                    categoryData?.itemByCategory
+                  ) {
+                    displayItems = categoryData.itemByCategory;
+                  } else {
+                    displayItems = inventoryData?.inventoryItems || [];
+                  }
+
+                  return displayItems.map((item) => (
+                    <tbody key={item.id}>
+                      <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
+                        <td className="text-left text-gray-500 text-sm font-medium px-6 min-w-[200px]">
+                          {item.itemSKU}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.productName}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.category}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.warehouseLocation}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.rackLocation}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px] ">
+                          {item.quantityInStock}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.reorderLevel}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.unitOfMeasure}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.costPerUnit}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {item.totalValue}
+                        </td>
+                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
+                          {FormatDate(item.lastRestocked)}
+                        </td>
+                      </tr>
+                    </tbody>
+                  ));
+                })()}
               </table>
             </div>
           </div>

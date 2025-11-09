@@ -21,6 +21,7 @@ builder.Services.AddCors(options =>
 });
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddHttpContextAccessor(); // Add this line
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -29,7 +30,8 @@ builder.Services
     .AddGraphQLServer()
     .AddQueryType<EnterpriseGradeInventoryAPI.GraphQL.Query>()
     .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Queries.InventoryQuery>()
-    .AddMutationType<EnterpriseGradeInventoryAPI.GraphQL.Mutation>();
+    .AddMutationType<EnterpriseGradeInventoryAPI.GraphQL.Mutation>()
+    .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Mutations.WarehouseMutation>();
     
 
 var app = builder.Build();

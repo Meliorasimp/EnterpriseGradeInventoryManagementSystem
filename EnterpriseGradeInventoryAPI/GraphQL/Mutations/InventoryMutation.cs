@@ -11,6 +11,7 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
     public string ProductName { get; set; } = string.Empty;
     public string Category { get; set; } = string.Empty;
     public string WarehouseLocation { get; set; } = string.Empty;
+    public string RackLocation { get; set; } = string.Empty;
     public int QuantityInStock { get; set; }
     public int ReorderLevel { get; set; }
     public string UnitOfMeasure { get; set; } = string.Empty;
@@ -33,6 +34,7 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
             ProductName = item.ProductName,
             Category = item.Category,
             WarehouseLocation = item.WarehouseLocation,
+            RackLocation = item.RackLocation,
             QuantityInStock = item.QuantityInStock,
             ReorderLevel = item.ReorderLevel,
             UnitOfMeasure = item.UnitOfMeasure,

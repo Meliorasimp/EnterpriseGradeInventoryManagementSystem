@@ -12,5 +12,6 @@ namespace EnterpriseGradeInventoryAPI.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Inventory> Inventories { get; set; }
+        public DbSet<Warehouse> Warehouses { get; set; }
     }
 }

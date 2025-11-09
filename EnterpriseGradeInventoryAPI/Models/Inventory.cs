@@ -7,6 +7,7 @@ namespace EnterpriseGradeInventoryAPI.Models
     public string ProductName { get; set; } = null!;
     public string Category { get; set; } = null!;
     public string WarehouseLocation { get; set; } = null!;
+    public string RackLocation { get; set; } = null!;
     public int QuantityInStock { get; set; }
     public int ReorderLevel { get; set; }
     public string UnitOfMeasure { get; set; } = null!;

@@ -31,7 +31,7 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
     {
       return context.Inventories.Count(i => i.QuantityInStock == 0);
     }
-    
+
     public IQueryable<Inventory> GetItemBySearchTerm([Service] ApplicationDbContext context, string searchTerm)
     {
       var keyword = searchTerm.ToLower();
@@ -40,6 +40,12 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
         i.Category.ToLower().Contains(keyword) ||
         i.WarehouseLocation.ToLower().Contains(keyword) ||
         i.ItemSKU.ToLower().Contains(keyword));
+    }
+    
+    public IQueryable<Inventory> GetItemByCategory([Service] ApplicationDbContext context, string category)
+    {
+      var keyword = category.ToLower();
+      return context.Inventories.Where(i => i.Category.ToLower() == keyword);
     }
   }
 }

@@ -4,6 +4,7 @@ export interface InventoryInputTypes {
   productName: string;
   category: string;
   warehouseLocation: string;
+  rackLocation: string;
   quantityInStock: number;
   reorderLevel: number;
   unitOfMeasure: string;
@@ -12,6 +13,7 @@ export interface InventoryInputTypes {
 
 export interface SearchType {
   dataSearch: string;
+  categorySearch: string;
 }
 
 export interface InventoryDataTypes {
@@ -25,6 +27,7 @@ export interface InventoryDataTypes {
   totalValue: number;
   unitOfMeasure: string;
   warehouseLocation: string;
+  rackLocation: string;
   lastRestocked: string;
 }
 
@@ -38,4 +41,8 @@ export interface FetchInventoryResponse {
 
 export interface SearchInventoryResponse {
   itemBySearchTerm: InventoryDataTypes[];
+}
+
+export interface SearchCategoryInventoryResponse {
+  itemByCategory: InventoryDataTypes[];
 }

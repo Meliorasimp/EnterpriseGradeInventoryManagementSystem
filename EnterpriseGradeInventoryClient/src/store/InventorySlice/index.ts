@@ -2,11 +2,12 @@ import {
   type InventoryInputTypes,
   type SearchType,
 } from "../../types/inventory";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 const initialInventoryInputState: InventoryInputTypes[] = [];
 const initialSearchState: SearchType = {
   dataSearch: "",
+  categorySearch: "",
 };
 
 const InventoryInputSlice = createSlice({
@@ -20,6 +21,7 @@ const InventoryInputSlice = createSlice({
         productName: "",
         category: "",
         warehouseLocation: "",
+        rackLocation: "",
         quantityInStock: 0,
         reorderLevel: 0,
         unitOfMeasure: "",
@@ -47,8 +49,11 @@ const SearchSlice = createSlice({
   name: "search",
   initialState: initialSearchState,
   reducers: {
-    setDataSearch(state, action) {
+    setDataSearch(state, action: PayloadAction<string>) {
       state.dataSearch = action.payload;
+    },
+    setCategorySearch(state, action: PayloadAction<string>) {
+      state.categorySearch = action.payload;
     },
   },
 });
@@ -56,5 +61,5 @@ const SearchSlice = createSlice({
 export const { addNewRow, removeRow, updateRow, clearAll } =
   InventoryInputSlice.actions;
 export const InventoryInputReducer = InventoryInputSlice.reducer;
-export const { setDataSearch } = SearchSlice.actions;
+export const { setDataSearch, setCategorySearch } = SearchSlice.actions;
 export const SearchReducer = SearchSlice.reducer;

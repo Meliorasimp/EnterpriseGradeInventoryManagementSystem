@@ -2,8 +2,9 @@ import { configureStore } from "@reduxjs/toolkit";
 import { interactionReducer } from "./InteractionSlice";
 import { registerReducer } from "./RegisterSlice";
 import { loginReducer } from "./LoginSlice";
-import { InventoryInputReducer } from "./Inventory";
-import { SearchReducer } from "./Inventory";
+import { InventoryInputReducer } from "./InventorySlice";
+import { SearchReducer } from "./InventorySlice";
+import { warehouseReducer } from "./WarehouseSlice";
 
 export const store = configureStore({
   reducer: {
@@ -12,6 +13,7 @@ export const store = configureStore({
     login: loginReducer,
     inventoryInput: InventoryInputReducer,
     search: SearchReducer,
+    warehouseInput: warehouseReducer,
   },
 });
 
