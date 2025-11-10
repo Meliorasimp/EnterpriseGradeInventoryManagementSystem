@@ -1,40 +1,66 @@
-The function Name of the Query or Mutation must Match with the c# function in the backend,
-Do note that Hotchocolate Removes Some Prefixes so I listed all the Prefixes it
-removes to save you time and Headache.
+# 🔍 HotChocolate GraphQL Function Name Rules
 
-From Query/Mutation name ➡️ Backend C# name
+The **function name** of the Query or Mutation must match the corresponding **C# method name** in the backend.  
+⚠️ Note: HotChocolate removes certain prefixes automatically — this list helps you avoid mismatches and confusion.
 
-Prefixes HotChocolate Removes:
-Get Prefix (Most Common):
-GetUser() → user
-GetUsers() → users
-GetInventory() → inventory
-GetUserById() → userById
-GetProductList() → productList
+---
 
-Is Prefix (Boolean Methods):
-IsActive() → active
-IsValid() → valid
-IsAuthenticated() → authenticated
+## From Query/Mutation name ➡️ Backend C# name
 
-Has Prefix (Boolean Methods):
-HasPermission() → permission
-HasAccess() → access
-HasInventory() → inventory
+### 🧩 Prefixes HotChocolate Removes
 
-Can Prefix (Boolean Methods):
-CanEdit() → edit
-CanDelete() → delete
-CanAccess() → access
+#### Get Prefix (Most Common)
 
-❌ Prefixes HotChocolate KEEPS:
-Action Verbs (Mutations):
-CreateUser() → createUser ✅
-UpdateProduct() → updateProduct ✅
-DeleteItem() → deleteItem ✅
-AddInventory() → addInventory ✅
+| Query/Mutation     | Backend C# Function |
+| ------------------ | ------------------- |
+| `GetUser()`        | `user`              |
+| `GetUsers()`       | `users`             |
+| `GetInventory()`   | `inventory`         |
+| `GetUserById()`    | `userById`          |
+| `GetProductList()` | `productList`       |
 
-Other Verbs:
-FindUser() → findUser ✅
-SearchProducts() → searchProducts ✅
-CalculateTotal() → calculateTotal ✅
+#### Is Prefix (Boolean Methods)
+
+| Example             | Result          |
+| ------------------- | --------------- |
+| `IsActive()`        | `active`        |
+| `IsValid()`         | `valid`         |
+| `IsAuthenticated()` | `authenticated` |
+
+#### Has Prefix (Boolean Methods)
+
+| Example           | Result       |
+| ----------------- | ------------ |
+| `HasPermission()` | `permission` |
+| `HasAccess()`     | `access`     |
+| `HasInventory()`  | `inventory`  |
+
+#### Can Prefix (Boolean Methods)
+
+| Example       | Result   |
+| ------------- | -------- |
+| `CanEdit()`   | `edit`   |
+| `CanDelete()` | `delete` |
+| `CanAccess()` | `access` |
+
+---
+
+## 🚫 Prefixes HotChocolate **Keeps**
+
+✅ Action verbs (for Mutations):
+| Example | Result |
+|----------|---------|
+| `CreateUser()` | `createUser` |
+| `UpdateProduct()` | `updateProduct` |
+| `DeleteItem()` | `deleteItem` |
+| `AddInventory()` | `addInventory` |
+
+---
+
+## 🧠 Other Verbs
+
+| Example            | Result           |
+| ------------------ | ---------------- |
+| `FindUser()`       | `findUser`       |
+| `SearchProducts()` | `searchProducts` |
+| `CalculateTotal()` | `calculateTotal` |
