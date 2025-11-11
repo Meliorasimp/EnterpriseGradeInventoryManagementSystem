@@ -4,6 +4,7 @@ using EnterpriseGradeInventoryAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseGradeInventoryAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251111035837_AddStorageLocationModel")]
+    partial class AddStorageLocationModel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -71,9 +74,6 @@ namespace EnterpriseGradeInventoryAPI.Migrations
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("UserId1")
-                        .HasColumnType("int");
-
                     b.Property<string>("WarehouseLocation")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -83,8 +83,6 @@ namespace EnterpriseGradeInventoryAPI.Migrations
                     b.HasIndex("StorageLocationId");
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("Inventories");
                 });
@@ -207,9 +205,6 @@ namespace EnterpriseGradeInventoryAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("UserId")
-                        .HasColumnType("int");
-
                     b.Property<string>("WarehouseCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -222,8 +217,6 @@ namespace EnterpriseGradeInventoryAPI.Migrations
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("UserId");
-
                     b.ToTable("Warehouses");
                 });
 
@@ -231,18 +224,13 @@ namespace EnterpriseGradeInventoryAPI.Migrations
                 {
                     b.HasOne("EnterpriseGradeInventoryAPI.Models.StorageLocation", "StorageLocation")
                         .WithMany()
-                        .HasForeignKey("StorageLocationId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .HasForeignKey("StorageLocationId");
 
                     b.HasOne("EnterpriseGradeInventoryAPI.Models.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("EnterpriseGradeInventoryAPI.Models.User", null)
                         .WithMany("Inventories")
-                        .HasForeignKey("UserId1");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("StorageLocation");
 
@@ -267,14 +255,10 @@ namespace EnterpriseGradeInventoryAPI.Migrations
             modelBuilder.Entity("EnterpriseGradeInventoryAPI.Models.Warehouse", b =>
                 {
                     b.HasOne("EnterpriseGradeInventoryAPI.Models.User", "CreatedByUser")
-                        .WithMany()
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("EnterpriseGradeInventoryAPI.Models.User", null)
                         .WithMany("Warehouses")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("CreatedByUser");
                 });

@@ -5,6 +5,7 @@ import { loginReducer } from "./LoginSlice";
 import { InventoryInputReducer } from "./InventorySlice";
 import { SearchReducer } from "./InventorySlice";
 import { warehouseReducer } from "./WarehouseSlice";
+import { individualWarehouseReducer } from "./WarehouseSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     inventoryInput: InventoryInputReducer,
     search: SearchReducer,
     warehouseInput: warehouseReducer,
+    individualWarehouse: individualWarehouseReducer,
   },
 });
 

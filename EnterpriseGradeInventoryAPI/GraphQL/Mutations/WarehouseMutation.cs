@@ -45,7 +45,7 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
             WarehouseName = item.WarehouseName,
             WarehouseCode = item.WarehouseCode,
             Address = item.Address,
-            Manager = item.Manager, // Use user's last name as manager
+            Manager = item.Manager,
             ContactEmail = item.ContactEmail,
             Region = item.Region,
             Status = item.Status,

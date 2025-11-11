@@ -8,3 +8,13 @@ export interface WarehouseInputTypes {
   region: string;
   status: string;
 }
+
+export interface WarehouseNameType {
+  allWarehouses: {
+    warehouseName: string;
+  }[];
+}
+
+export interface IndividualWarehouseType {
+  warehouseName: string;
+}

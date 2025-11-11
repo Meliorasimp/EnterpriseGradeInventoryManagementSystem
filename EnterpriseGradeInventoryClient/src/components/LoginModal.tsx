@@ -11,12 +11,15 @@ import LoginUser from "../gql/mutations/loginMutation.gql";
 import { type LoginUserResponse } from "../types/loginuserresponse";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+
 const LoginModal = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleClose = () => {
     dispatch(setIsLoginModalOpen(false));
   };
+
+  //Login State to pass into the Mutation
   const loginemail = useSelector((state: RootState) => state.login.loginemail);
   const loginpassword = useSelector(
     (state: RootState) => state.login.loginpassword
@@ -24,11 +27,9 @@ const LoginModal = () => {
 
   const [loginUser] = useMutation<LoginUserResponse>(LoginUser);
 
+  //Login Logic
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Logging in with:", { loginemail, loginpassword });
-
     try {
       const response = await loginUser({
         variables: {

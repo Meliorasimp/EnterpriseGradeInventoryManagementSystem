@@ -16,5 +16,6 @@ namespace EnterpriseGradeInventoryAPI.Models
         //One User can Have Many Inventories (One to Many Relationship)
         public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
         public ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
+        public ICollection<StorageLocation> StorageLocations { get; set; } = new List<StorageLocation>();
     }
 }

@@ -211,8 +211,8 @@ const AddWarehouseModal = () => {
                       </td>
                       <td className="px-4 py-3">
                         <select
-                          name="region"
-                          id="region"
+                          name="status"
+                          id="status"
                           value={row.status}
                           onChange={(e) =>
                             dispatch(
@@ -225,6 +225,9 @@ const AddWarehouseModal = () => {
                           }
                           className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
                         >
+                          <option value="" disabled>
+                            Select Status
+                          </option>
                           <option value="active">Active</option>
                           <option value="inactive">Inactive</option>
                         </select>

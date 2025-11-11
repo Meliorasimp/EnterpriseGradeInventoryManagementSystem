@@ -30,6 +30,7 @@ builder.Services
     .AddGraphQLServer()
     .AddQueryType<EnterpriseGradeInventoryAPI.GraphQL.Query>()
     .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Queries.InventoryQuery>()
+    .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Queries.WarehouseQuery>()
     .AddMutationType<EnterpriseGradeInventoryAPI.GraphQL.Mutation>()
     .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Mutations.WarehouseMutation>();
     

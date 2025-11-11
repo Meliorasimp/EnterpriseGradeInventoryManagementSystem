@@ -15,7 +15,10 @@ import { toast } from "sonner";
 
 const AddInventoryModal = () => {
   const dispatch = useDispatch<AppDispatch>();
+
+  //Mutation to Add Inventory Items
   const [addInventory] = useMutation(AddInventory, {
+    //Refetch Inventory Query after Mutation to update Cache
     refetchQueries: [
       {
         query: FetchInventory,

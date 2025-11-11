@@ -18,12 +18,14 @@ import useDebounce from "../hooks/useDebounce";
 
 const Inventory = () => {
   const dispatch = useDispatch();
+  //Fetch all inventory items
   const {
     data: inventoryData,
     loading: inventoryLoading,
     error: inventoryError,
   } = useQuery<FetchInventoryResponse>(GetAllInventoryItems);
 
+  //Fetch Result from Searching Inventory
   const dataSearch = useSelector((state: RootState) => state.search.dataSearch);
   const categorySearch = useSelector(
     (state: RootState) => state.search.categorySearch
@@ -33,14 +35,18 @@ const Inventory = () => {
   const debouncedSearchTerm = useDebounce(dataSearch, 400);
   const debouncedCategorySearch = useDebounce(categorySearch, 300);
 
+  // Inventory Modal State Selector
   const isInventoryModalOpen = useSelector(
     (state: RootState) => state.interaction.isInventoryModalOpen
   );
+
+  //Fetch Search Result from Database based on Search Term
   const { data: searchData } = useQuery<SearchInventoryResponse>(Search, {
     variables: { searchTerm: debouncedSearchTerm },
     skip: !debouncedSearchTerm || debouncedSearchTerm.trim() === "", // Only run when there's a search term
   });
 
+  //Fetch Search Result from Database based on Category
   const { data: categoryData } = useQuery<SearchCategoryInventoryResponse>(
     SearchCategory,
     {
@@ -48,8 +54,8 @@ const Inventory = () => {
       skip: !debouncedCategorySearch || debouncedCategorySearch.trim() === "", // Only run when there's a category selected
     }
   );
-  console.log("Category Data:", categoryData);
 
+  //Function to Manipulate Inventory Modal State
   const handleAddInventoryClick = () => {
     dispatch(setIsInventoryModalOpen(true));
   };
@@ -59,9 +65,13 @@ const Inventory = () => {
     // Dispatch action to update search term in Redux store
     dispatch(setDataSearch(e.target.value));
   };
+
+  //Code Splitting for Inventory Modal to improve performance
   const AddInventoryModal = lazy(
     () => import("../components/AddInventoryModal")
   );
+
+  // Format total inventory value in millions
   const formatted =
     (inventoryData?.totalInventoryValue
       ? inventoryData.totalInventoryValue / 1_000_000
@@ -291,27 +301,43 @@ const Inventory = () => {
                     </th>
                   </tr>
                 </thead>
-                {inventoryLoading && <p>Loading...</p>}
-                {inventoryError && <p>Error loading inventory data.</p>}
-                {/* Show filtered results based on search and category filters */}
-                {(() => {
-                  // Priority: 1. Search results, 2. Category results, 3. All inventory
-                  let displayItems = [];
+                <tbody>
+                  {inventoryLoading && (
+                    <tr>
+                      <td colSpan={9} className="text-center py-8">
+                        <h1 className="text-lg text-gray-600">Loading...</h1>
+                      </td>
+                    </tr>
+                  )}
+                  {inventoryError && (
+                    <tr>
+                      <td colSpan={9} className="text-center py-8">
+                        <h1 className="text-lg text-red-600">
+                          Error loading inventory data.
+                        </h1>
+                      </td>
+                    </tr>
+                  )}
+                  {/* Show filtered results based on search and category filters */}
+                  {(() => {
+                    // Priority: 1. Search results, 2. Category results, 3. All inventory
+                    let displayItems = [];
 
-                  if (debouncedSearchTerm && searchData?.itemBySearchTerm) {
-                    displayItems = searchData.itemBySearchTerm;
-                  } else if (
-                    debouncedCategorySearch &&
-                    categoryData?.itemByCategory
-                  ) {
-                    displayItems = categoryData.itemByCategory;
-                  } else {
-                    displayItems = inventoryData?.inventoryItems || [];
-                  }
-
-                  return displayItems.map((item) => (
-                    <tbody key={item.id}>
-                      <tr className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200">
+                    if (debouncedSearchTerm && searchData?.itemBySearchTerm) {
+                      displayItems = searchData.itemBySearchTerm;
+                    } else if (
+                      debouncedCategorySearch &&
+                      categoryData?.itemByCategory
+                    ) {
+                      displayItems = categoryData.itemByCategory;
+                    } else {
+                      displayItems = inventoryData?.inventoryItems || [];
+                    }
+                    return displayItems.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200"
+                      >
                         <td className="text-left text-gray-500 text-sm font-medium px-6 min-w-[200px]">
                           {item.itemSKU}
                         </td>
@@ -346,9 +372,9 @@ const Inventory = () => {
                           {FormatDate(item.lastRestocked)}
                         </td>
                       </tr>
-                    </tbody>
-                  ));
-                })()}
+                    ));
+                  })()}
+                </tbody>
               </table>
             </div>
           </div>

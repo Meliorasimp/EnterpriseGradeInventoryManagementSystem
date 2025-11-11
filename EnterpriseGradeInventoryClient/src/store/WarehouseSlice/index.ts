@@ -1,7 +1,13 @@
-import { type WarehouseInputTypes } from "../../types/warehouse";
+import {
+  type WarehouseInputTypes,
+  type IndividualWarehouseType,
+} from "../../types/warehouse";
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 
 const initialWarehouseInputState: WarehouseInputTypes[] = [];
+const initialIndividualWarehouseState: IndividualWarehouseType = {
+  warehouseName: "",
+};
 
 const warehouseSlice = createSlice({
   name: "warehouseInput",
@@ -16,7 +22,7 @@ const warehouseSlice = createSlice({
         manager: "",
         contactEmail: "",
         region: "",
-        status: "",
+        status: "active", // Default to active status
       });
     },
     removeRow(state: WarehouseInputTypes[], action: PayloadAction<number>) {
@@ -33,5 +39,17 @@ const warehouseSlice = createSlice({
   },
 });
 
+const individualWarehouseSlice = createSlice({
+  name: "individualWarehouse",
+  initialState: initialIndividualWarehouseState,
+  reducers: {
+    setWareHouse: (state, action: PayloadAction<string>) => {
+      state.warehouseName = action.payload;
+    },
+  },
+});
+
 export const { addNewRow, removeRow, updateRow } = warehouseSlice.actions;
 export const warehouseReducer = warehouseSlice.reducer;
+export const { setWareHouse } = individualWarehouseSlice.actions;
+export const individualWarehouseReducer = individualWarehouseSlice.reducer;
