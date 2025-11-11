@@ -3,4 +3,5 @@ export interface InteractionType {
   isLoginModalOpen: boolean;
   isInventoryModalOpen: boolean;
   isWarehouseModalOpen: boolean;
+  isStorageLocationModalOpen: boolean;
 }

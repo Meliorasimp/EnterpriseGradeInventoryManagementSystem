@@ -1,6 +1,22 @@
 import Navbar from "../components/Navbar";
+import { useDispatch, useSelector } from "react-redux";
+import { setIsStorageLocationModalOpen } from "../store/InteractionSlice";
+import type { RootState } from "../store";
+import { lazy, Suspense } from "react";
+const StorageLocationModal = lazy(
+  () => import("../components/AddStorageLocationModal")
+);
 
 const StorageLocations = () => {
+  const dispatch = useDispatch();
+
+  const handleStorageLocationAdd = () => {
+    dispatch(setIsStorageLocationModalOpen(true));
+  };
+
+  const storageLocation = useSelector(
+    (state: RootState) => state.interaction.isStorageLocationModalOpen
+  );
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />
@@ -19,7 +35,10 @@ const StorageLocations = () => {
                 </p>
               </div>
               <div className="flex items-center space-x-4">
-                <button className="flex items-center px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl">
+                <button
+                  className="flex items-center px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  onClick={handleStorageLocationAdd}
+                >
                   <svg
                     className="w-5 h-5 mr-2"
                     fill="none"
@@ -553,6 +572,11 @@ const StorageLocations = () => {
           </div>
         </div>
       </main>
+      {storageLocation && (
+        <Suspense>
+          <StorageLocationModal />
+        </Suspense>
+      )}
     </div>
   );
 };
