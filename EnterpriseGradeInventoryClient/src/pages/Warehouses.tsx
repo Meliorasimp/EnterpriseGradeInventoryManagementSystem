@@ -16,13 +16,10 @@ const Warehouses = () => {
     (state: RootState) => state.interaction
   );
 
-  const selectedWarehouse = useSelector(
-    (state: RootState) => state.individualWarehouse.warehouseName
-  );
+  useSelector((state: RootState) => state.individualWarehouse.warehouseName);
 
   const { data: warehouseQueryData } =
     useQuery<WarehouseNameType>(getAllWarehouse);
-  console.log("Warehouse Data:", warehouseQueryData);
 
   return (
     <div className="flex h-screen overflow-hidden bg-linear-to-br from-gray-50 to-gray-100">

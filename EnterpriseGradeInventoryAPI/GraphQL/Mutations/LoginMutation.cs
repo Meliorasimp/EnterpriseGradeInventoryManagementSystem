@@ -51,7 +51,7 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
         //Created an in-memory representation of the JWT
         var token = new JwtSecurityToken(
           claims: claims,
-          expires: DateTime.Now.AddHours(1),
+          expires: DateTime.Now.AddHours(3), //Token expiration time
           signingCredentials: creds
         );
 

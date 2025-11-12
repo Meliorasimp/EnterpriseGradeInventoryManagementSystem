@@ -4,6 +4,7 @@ using EnterpriseGradeInventoryAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace EnterpriseGradeInventoryAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251112071119_FixUserInventoryRelationship")]
+    partial class FixUserInventoryRelationship
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -106,10 +109,6 @@ namespace EnterpriseGradeInventoryAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("StorageType")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -118,7 +117,7 @@ namespace EnterpriseGradeInventoryAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("UserId")
+                    b.Property<int?>("UserId")
                         .HasColumnType("int");
 
                     b.Property<int>("WarehouseId")
@@ -239,19 +238,15 @@ namespace EnterpriseGradeInventoryAPI.Migrations
 
             modelBuilder.Entity("EnterpriseGradeInventoryAPI.Models.StorageLocation", b =>
                 {
-                    b.HasOne("EnterpriseGradeInventoryAPI.Models.User", "User")
+                    b.HasOne("EnterpriseGradeInventoryAPI.Models.User", null)
                         .WithMany("StorageLocations")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.HasOne("EnterpriseGradeInventoryAPI.Models.Warehouse", "Warehouse")
                         .WithMany()
                         .HasForeignKey("WarehouseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("User");
 
                     b.Navigation("Warehouse");
                 });

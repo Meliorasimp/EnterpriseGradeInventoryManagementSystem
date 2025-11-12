@@ -3,6 +3,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { setIsStorageLocationModalOpen } from "../store/InteractionSlice";
 import type { RootState } from "../store";
 import { lazy, Suspense } from "react";
+import { useQuery } from "@apollo/client/react";
+import AllStorageLocation from "../gql/query/storageLocationQuery/storageLocationQuery.gql";
+import type { StorageLocationQueryResponse } from "../types/storagelocation";
 const StorageLocationModal = lazy(
   () => import("../components/AddStorageLocationModal")
 );
@@ -13,7 +16,14 @@ const StorageLocations = () => {
   const handleStorageLocationAdd = () => {
     dispatch(setIsStorageLocationModalOpen(true));
   };
-
+  const {
+    data: storageLocationData,
+    loading,
+    error,
+  } = useQuery<StorageLocationQueryResponse>(AllStorageLocation);
+  console.log("Fetched Storage Locations:", storageLocationData);
+  console.log("Loading:", loading);
+  console.log("Error:", error);
   const storageLocation = useSelector(
     (state: RootState) => state.interaction.isStorageLocationModalOpen
   );

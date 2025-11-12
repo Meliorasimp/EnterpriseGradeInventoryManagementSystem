@@ -11,7 +11,10 @@ export interface WarehouseInputTypes {
 
 export interface WarehouseNameType {
   allWarehouses: {
+    id: number;
     warehouseName: string;
+    warehouseCode: string;
+    status: string;
   }[];
 }
 

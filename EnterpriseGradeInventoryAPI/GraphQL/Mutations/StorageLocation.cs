@@ -6,26 +6,26 @@ using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Microsoft.EntityFrameworkCore;
 
 namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
 {
   [ExtendObjectType(typeof(Mutation))]
-  public class WarehouseMutation
+  public class StorageLocationMutation
   {
-    public class AddWarehouseInput
+    public class AddStorageLocationInput
     {
-      public string WarehouseName { get; set; } = string.Empty;
-      public string WarehouseCode { get; set; } = string.Empty;
-      public string Address { get; set; } = string.Empty;
-      public string Manager { get; set; } = string.Empty;
-      public string ContactEmail { get; set; } = string.Empty;
-      public string Region { get; set; } = string.Empty;
-      public string Status { get; set; } = string.Empty;
+      public string LocationCode { get; set; } = string.Empty;
+      public string SectionName { get; set; } = string.Empty;
+      public string StorageType { get; set; } = string.Empty;
+      public int MaxCapacity { get; set; }
+      public string UnitType { get; set; } = string.Empty;
+      public int WarehouseId { get; set; } // Frontend sends warehouse ID directly
     }
 
-    public async Task<WarehousePayload> addWarehouse(
+    public async Task<StorageLocationPayload> addStorageLocation(
         [Service] ApplicationDbContext context, 
-        List<AddWarehouseInput> input,
+        List<AddStorageLocationInput> storageLocation,
         [Service] IHttpContextAccessor httpContextAccessor)
     {
       try
@@ -37,40 +37,48 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
         {
           throw new GraphQLException(new Error("User must be authenticated", "UNAUTHORIZED"));
         }
+        
 
-        foreach (var item in input)
+        foreach (var item in storageLocation)
         {
-          var newWarehouse = new Warehouse
+          // Validate that the warehouse exists using ID (more efficient)
+          var warehouse = await context.Warehouses.FindAsync(item.WarehouseId);
+              
+          if (warehouse == null)
           {
-            WarehouseName = item.WarehouseName,
-            WarehouseCode = item.WarehouseCode,
-            Address = item.Address,
-            Manager = item.Manager,
-            ContactEmail = item.ContactEmail,
-            Region = item.Region,
-            Status = item.Status,
-            CreatedAt = DateTime.UtcNow,
-            CreatedByUserId = user.Id, // Keep the user ID for reference
-            CreatedByLastName = user.LastName,
-            // Note: 
-            // If you add CreatedByLastName property to Warehouse model, you can use:
-            // CreatedByLastName = user.LastName
-          };
-          context.Warehouses.Add(newWarehouse);
-          await context.SaveChangesAsync();
+            throw new GraphQLException(new Error($"Warehouse with ID {item.WarehouseId} not found", "WAREHOUSE_NOT_FOUND"));
+          }
 
+          var newStorageLocation = new StorageLocation
+          {
+            LocationCode = item.LocationCode,
+            SectionName = item.SectionName,
+            StorageType = item.StorageType,
+            MaxCapacity = item.MaxCapacity,
+            UnitType = item.UnitType,
+            WarehouseId = item.WarehouseId, // Use the provided warehouse ID directly
+            CreatedAt = DateTime.UtcNow,
+            UserId = user.Id // Automatically assign the authenticated user
+            
+          };
+          context.StorageLocations.Add(newStorageLocation);
+          await context.SaveChangesAsync();
         }
-        var lastWarehouse = context.Warehouses.OrderBy(w => w.Id).Last();
-        return new WarehousePayload
+        
+        var lastStorageLocation = context.StorageLocations.OrderBy(sl => sl.Id).Last();
+        return new StorageLocationPayload
         {
-          Id = lastWarehouse.Id,
-          Name = lastWarehouse.WarehouseName,
-          Location = lastWarehouse.Address
+          Id = lastStorageLocation.Id,
+          LocationCode = lastStorageLocation.LocationCode,
+          SectionName = lastStorageLocation.SectionName,
+          StorageType = lastStorageLocation.StorageType,
+          MaxCapacity = lastStorageLocation.MaxCapacity,
+          UnitType = lastStorageLocation.UnitType
         };
       }
       catch (Exception ex)
       {
-        throw new GraphQLException(new Error("Failed to add warehouse(s): " + ex.Message, "WAREHOUSE_ADD_ERROR"));
+        throw new GraphQLException(new Error("Failed to add storage location(s): " + ex.Message, "STORAGE_LOCATION_ADD_ERROR"));
       }
     }
 
@@ -93,7 +101,6 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
 
       // Extract token
       var token = authHeader.Substring("Bearer ".Length).Trim();
-      Console.WriteLine($"DEBUG: Extracted token: {token.Substring(0, Math.Min(20, token.Length))}...");
       
       try
       {
@@ -112,21 +119,17 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
         };
 
         var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
-        Console.WriteLine("DEBUG: Token validation successful");
         
         // Get user ID from claims
         var userIdClaim = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        Console.WriteLine($"DEBUG: User ID claim: {userIdClaim}");
         
         if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out var userId))
         {
-          Console.WriteLine("DEBUG: Invalid or missing user ID claim");
           return null;
         }
 
         // Get user from database
         var user = await context.Users.FindAsync(userId);
-        Console.WriteLine($"DEBUG: Found user: {user?.Email}");
         return user;
       }
       catch (Exception ex)
@@ -136,11 +139,14 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Mutations
       }
     }
 
-    public class WarehousePayload
+    public class StorageLocationPayload
     {
       public int Id { get; set; }
-      public string Name { get; set; } = string.Empty;
-      public string Location { get; set; } = string.Empty;
+      public string LocationCode { get; set; } = string.Empty;
+      public string SectionName { get; set; } = string.Empty;
+      public string StorageType { get; set; } = string.Empty;
+      public int MaxCapacity { get; set; }
+      public string UnitType { get; set; } = string.Empty;
     }
   }
 }

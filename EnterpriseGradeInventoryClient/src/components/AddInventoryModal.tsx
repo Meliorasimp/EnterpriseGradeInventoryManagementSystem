@@ -12,7 +12,6 @@ import AddInventory from "../gql/mutations/inventoryMutation.gql";
 import FetchInventory from "../gql/query/inventoryQuery/inventoryQuery.gql";
 import type React from "react";
 import { toast } from "sonner";
-
 const AddInventoryModal = () => {
   const dispatch = useDispatch<AppDispatch>();
 
@@ -57,6 +56,7 @@ const AddInventoryModal = () => {
   ) => {
     dispatch(updateRow({ id, field, value }));
   };
+  // Fetch all warehouse names for dropdown Warehouse Location
 
   const handleInventorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,10 +139,10 @@ const AddInventoryModal = () => {
                     Category
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[200px]">
-                    Warehouse Location
+                    Rack Location
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[200px]">
-                    Rack Location
+                    Warehouse Location
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[150px]">
                     Quantity in Stock
@@ -221,31 +221,6 @@ const AddInventoryModal = () => {
                       </td>
                       <td className="px-4 py-3">
                         <select
-                          value={row.warehouseLocation}
-                          onChange={(e) =>
-                            handleUpdateRow(
-                              row.id,
-                              "warehouseLocation",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
-                          required
-                        >
-                          <option value="">Select Warehouse</option>
-                          <option value="warehouse-a">
-                            Warehouse A - Zone 1
-                          </option>
-                          <option value="warehouse-b">
-                            Warehouse B - Zone 2
-                          </option>
-                          <option value="warehouse-c">
-                            Warehouse C - Zone 1
-                          </option>
-                        </select>
-                      </td>
-                      <td className="px-4 py-3">
-                        <select
                           value={row.rackLocation}
                           onChange={(e) =>
                             handleUpdateRow(
@@ -257,9 +232,11 @@ const AddInventoryModal = () => {
                           className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
                           required
                         >
-                          <option value="">Select Location</option>
-                          <option value="aisle-1">Aisle 1</option>
+                          <option value="">Select Rack Location</option>
                         </select>
+                      </td>
+                      <td className="px-4 py-3">
+                        <h1>Pluto</h1>
                       </td>
                       <td className="px-4 py-3">
                         <input

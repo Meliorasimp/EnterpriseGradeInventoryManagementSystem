@@ -31,8 +31,10 @@ builder.Services
     .AddQueryType<EnterpriseGradeInventoryAPI.GraphQL.Query>()
     .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Queries.InventoryQuery>()
     .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Queries.WarehouseQuery>()
+    .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Queries.StorageLocationQuery>()
     .AddMutationType<EnterpriseGradeInventoryAPI.GraphQL.Mutation>()
-    .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Mutations.WarehouseMutation>();
+    .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Mutations.WarehouseMutation>()
+    .AddTypeExtension<EnterpriseGradeInventoryAPI.GraphQL.Mutations.StorageLocationMutation>();
     
 
 var app = builder.Build();

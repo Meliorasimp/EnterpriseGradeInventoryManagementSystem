@@ -34,15 +34,22 @@ namespace EnterpriseGradeInventoryAPI.Data
             // Configure Inventory to User relationship - Restrict to avoid cascade conflicts  
             modelBuilder.Entity<Inventory>()
                 .HasOne(i => i.User)
-                .WithMany()
+                .WithMany(u => u.Inventories)  // ← Specify the collection property
                 .HasForeignKey(i => i.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Configure Warehouse to User (CreatedBy) relationship - Restrict to avoid cascade conflicts
             modelBuilder.Entity<Warehouse>()
                 .HasOne(w => w.CreatedByUser)
-                .WithMany()
+                .WithMany(u => u.Warehouses)  // ← Specify the collection property
                 .HasForeignKey(w => w.CreatedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure StorageLocation to User relationship - Restrict to avoid cascade conflicts
+            modelBuilder.Entity<StorageLocation>()
+                .HasOne(sl => sl.User)
+                .WithMany(u => u.StorageLocations)  // ← Specify the collection property
+                .HasForeignKey(sl => sl.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);

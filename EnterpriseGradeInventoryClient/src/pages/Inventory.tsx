@@ -78,6 +78,8 @@ const Inventory = () => {
       : 0
     ).toFixed(2) + "M";
 
+  // Fetch all warehouse names for the filter dropdown
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />
