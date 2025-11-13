@@ -8,6 +8,7 @@ const initialInventoryInputState: InventoryInputTypes[] = [];
 const initialSearchState: SearchType = {
   dataSearch: "",
   categorySearch: "",
+  warehouseSearch: "",
 };
 
 const InventoryInputSlice = createSlice({
@@ -55,11 +56,15 @@ const SearchSlice = createSlice({
     setCategorySearch(state, action: PayloadAction<string>) {
       state.categorySearch = action.payload;
     },
+    setWarehouseSearch(state, action: PayloadAction<string>) {
+      state.warehouseSearch = action.payload;
+    },
   },
 });
 
 export const { addNewRow, removeRow, updateRow, clearAll } =
   InventoryInputSlice.actions;
 export const InventoryInputReducer = InventoryInputSlice.reducer;
-export const { setDataSearch, setCategorySearch } = SearchSlice.actions;
+export const { setDataSearch, setCategorySearch, setWarehouseSearch } =
+  SearchSlice.actions;
 export const SearchReducer = SearchSlice.reducer;

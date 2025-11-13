@@ -41,11 +41,17 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
         i.WarehouseLocation.ToLower().Contains(keyword) ||
         i.ItemSKU.ToLower().Contains(keyword));
     }
-    
+
     public IQueryable<Inventory> GetItemByCategory([Service] ApplicationDbContext context, string category)
     {
       var keyword = category.ToLower();
       return context.Inventories.Where(i => i.Category.ToLower() == keyword);
+    }
+    
+    public IQueryable<Inventory> GetItemByWarehouseLocation([Service] ApplicationDbContext context, string warehouseName) 
+    { 
+      var keyword = warehouseName.ToLower();
+      return context.Inventories.Where(i => i.WarehouseLocation.ToLower() == keyword);
     }
   }
 }

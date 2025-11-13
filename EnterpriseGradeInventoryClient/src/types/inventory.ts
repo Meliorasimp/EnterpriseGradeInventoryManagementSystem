@@ -14,6 +14,7 @@ export interface InventoryInputTypes {
 export interface SearchType {
   dataSearch: string;
   categorySearch: string;
+  warehouseSearch: string;
 }
 
 export interface InventoryDataTypes {
@@ -45,4 +46,8 @@ export interface SearchInventoryResponse {
 
 export interface SearchCategoryInventoryResponse {
   itemByCategory: InventoryDataTypes[];
+}
+
+export interface WarehouseCategoryResponse {
+  itemByWarehouseLocation: InventoryDataTypes[];
 }

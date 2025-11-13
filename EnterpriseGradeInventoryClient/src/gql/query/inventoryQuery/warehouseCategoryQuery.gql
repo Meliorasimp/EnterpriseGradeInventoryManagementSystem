@@ -1,5 +1,5 @@
-query SearchByCategory($category: String!) {
-  itemByCategory(category: $category) {
+query GetItemByWarehouseLocation($warehouseName: String!) {
+  itemByWarehouseLocation(warehouseName: $warehouseName) {
     id
     itemSKU
     productName

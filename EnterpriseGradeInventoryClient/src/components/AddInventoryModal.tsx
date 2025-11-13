@@ -7,9 +7,11 @@ import {
   clearAll,
 } from "../store/InventorySlice";
 import { type AppDispatch, type RootState } from "../store";
-import { useMutation } from "@apollo/client/react";
+import { useMutation, useQuery } from "@apollo/client/react";
 import AddInventory from "../gql/mutations/inventoryMutation.gql";
 import FetchInventory from "../gql/query/inventoryQuery/inventoryQuery.gql";
+import GetAllStorageLocations from "../gql/query/storageLocationQuery/storageLocationQuery.gql";
+import { type StorageLocationQueryResponse } from "../types/storagelocation";
 import type React from "react";
 import { toast } from "sonner";
 const AddInventoryModal = () => {
@@ -114,6 +116,32 @@ const AddInventoryModal = () => {
     }
   };
 
+  //Fetch all storage locations for the warehouse location display
+  const { data: storageLocationData } = useQuery<StorageLocationQueryResponse>(
+    GetAllStorageLocations
+  );
+  console.log("Storage Location Data:", storageLocationData);
+
+  const handleRackLocationChange = (rowId: number, sectionName: string) => {
+    // Update the rack location
+    handleUpdateRow(rowId, "rackLocation", sectionName);
+
+    // Find the storage location data
+    const storageLocation = storageLocationData?.allStorageLocations.find(
+      (loc) => loc.sectionName === sectionName
+    );
+
+    if (storageLocation) {
+      // Auto-populate warehouse location
+      const warehouseName = storageLocation.warehouse?.warehouseName || "";
+      handleUpdateRow(rowId, "warehouseLocation", warehouseName);
+
+      // Auto-populate unit of measure
+      const unitType = storageLocation.unitType || "";
+      handleUpdateRow(rowId, "unitOfMeasure", unitType);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-40"
@@ -140,6 +168,9 @@ const AddInventoryModal = () => {
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[200px]">
                     Rack Location
+                    <span className="text-xs text-blue-600 block font-normal">
+                      (Auto-fills warehouse & unit)
+                    </span>
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 min-w-[200px]">
                     Warehouse Location
@@ -165,7 +196,7 @@ const AddInventoryModal = () => {
                 {inventoryRows.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={10}
                       className="px-4 py-8 text-center text-gray-500"
                     >
                       No rows added yet. Click "Add New Row" to start.
@@ -217,26 +248,36 @@ const AddInventoryModal = () => {
                           <option value="clothing">Clothing</option>
                           <option value="toys">Toys</option>
                           <option value="books">Books</option>
+                          <option value="foods">Foods</option>
                         </select>
                       </td>
                       <td className="px-4 py-3">
                         <select
                           value={row.rackLocation}
                           onChange={(e) =>
-                            handleUpdateRow(
-                              row.id,
-                              "rackLocation",
-                              e.target.value
-                            )
+                            handleRackLocationChange(row.id, e.target.value)
                           }
                           className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
                           required
                         >
                           <option value="">Select Rack Location</option>
+                          {storageLocationData?.allStorageLocations.map((l) => (
+                            <option key={l.id} value={l.sectionName}>
+                              {l.sectionName} - {l.locationCode} (
+                              {l.storageType}) - Max: {l.maxCapacity}{" "}
+                              {l.unitType}
+                            </option>
+                          ))}
                         </select>
                       </td>
                       <td className="px-4 py-3">
-                        <h1>Pluto</h1>
+                        <input
+                          type="text"
+                          placeholder="Auto-filled from rack location"
+                          value={row.warehouseLocation}
+                          readOnly
+                          className="w-full p-2 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <input
@@ -273,25 +314,13 @@ const AddInventoryModal = () => {
                         />
                       </td>
                       <td className="px-4 py-3">
-                        <select
+                        <input
+                          type="text"
+                          placeholder="Auto-filled from rack location"
                           value={row.unitOfMeasure}
-                          onChange={(e) =>
-                            handleUpdateRow(
-                              row.id,
-                              "unitOfMeasure",
-                              e.target.value
-                            )
-                          }
-                          required
-                          className="w-full p-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-lime-500 focus:border-lime-500"
-                        >
-                          <option value="">Select Unit</option>
-                          <option value="pieces">Pieces</option>
-                          <option value="kg">Kilograms</option>
-                          <option value="liters">Liters</option>
-                          <option value="boxes">Boxes</option>
-                          <option value="meters">Meters</option>
-                        </select>
+                          readOnly
+                          className="w-full p-2 text-sm border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                        />
                       </td>
                       <td className="px-4 py-3">
                         <input

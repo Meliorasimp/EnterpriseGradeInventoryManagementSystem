@@ -5,6 +5,7 @@ query SearchInventory($searchTerm: String!) {
     productName
     category
     warehouseLocation
+    rackLocation
     quantityInStock
     reorderLevel
     unitOfMeasure

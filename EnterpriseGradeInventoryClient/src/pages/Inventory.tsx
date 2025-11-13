@@ -9,11 +9,17 @@ import {
   type FetchInventoryResponse,
   type SearchCategoryInventoryResponse,
   type SearchInventoryResponse,
+  type WarehouseCategoryResponse,
 } from "../types/inventory";
 import { FormatDate } from "../Utils";
 import Search from "../gql/query/inventoryQuery/searchInventoryQuery.gql";
 import SearchCategory from "../gql/query/inventoryQuery/searchByCategoryQuery.gql";
-import { setDataSearch, setCategorySearch } from "../store/InventorySlice";
+import WarehouseCategory from "../gql/query/inventoryQuery/warehouseCategoryQuery.gql";
+import {
+  setDataSearch,
+  setCategorySearch,
+  setWarehouseSearch,
+} from "../store/InventorySlice";
 import useDebounce from "../hooks/useDebounce";
 
 const Inventory = () => {
@@ -30,10 +36,14 @@ const Inventory = () => {
   const categorySearch = useSelector(
     (state: RootState) => state.search.categorySearch
   );
+  const warehouseSearch = useSelector(
+    (state: RootState) => state.search.warehouseSearch
+  );
 
   // Debounce both search terms to avoid excessive API calls
   const debouncedSearchTerm = useDebounce(dataSearch, 400);
   const debouncedCategorySearch = useDebounce(categorySearch, 300);
+  const debouncedWarehouseSearch = useDebounce(warehouseSearch, 300);
 
   // Inventory Modal State Selector
   const isInventoryModalOpen = useSelector(
@@ -45,6 +55,15 @@ const Inventory = () => {
     variables: { searchTerm: debouncedSearchTerm },
     skip: !debouncedSearchTerm || debouncedSearchTerm.trim() === "", // Only run when there's a search term
   });
+
+  //Fetch Result from Database based on Warehouse Categories
+  const { data: warehouseCategoryData } = useQuery<WarehouseCategoryResponse>(
+    WarehouseCategory,
+    {
+      variables: { warehouseName: debouncedWarehouseSearch },
+      skip: !debouncedWarehouseSearch || debouncedWarehouseSearch.trim() === "", // Only run when there's a warehouse selected
+    }
+  );
 
   //Fetch Search Result from Database based on Category
   const { data: categoryData } = useQuery<SearchCategoryInventoryResponse>(
@@ -79,305 +98,475 @@ const Inventory = () => {
     ).toFixed(2) + "M";
 
   // Fetch all warehouse names for the filter dropdown
-
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />
-      <main className="flex-1 overflow-y-auto bg-gray-50">
+      <main className="flex-1 overflow-y-auto bg-linear-to-br from-gray-50 via-gray-100 to-gray-50">
         <div className="min-h-full p-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
-            <p className="text-gray-600 mt-2">
-              This is where you can manage your products and stock levels.
-            </p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    Total Inventory Value
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    &#8369;{formatted}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-lime-600"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 6v12m-3-2.818.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    In Stock Items
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {inventoryData?.inStockItems}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-lime-600"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    Low Stock Items
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {inventoryData?.lowStockItems}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-red-400"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="m4.5 5.25 7.5 7.5 7.5-7.5m-15 6 7.5 7.5 7.5-7.5"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    No Stock Items
-                  </p>
-                  <p className="text-3xl font-bold text-gray-900">
-                    {inventoryData?.outOfStockItems}
-                  </p>
-                </div>
-                <div className="w-12 h-12 bg-lime-100 rounded-lg flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke-width="1.5"
-                    stroke="currentColor"
-                    className="size-6 text-red-400"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow h-full">
-            <div className="h-1/2 flex flex-row space-x-4 justify-between">
+          {/* Header Section */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
               <div>
-                <input
-                  type="text"
-                  className="border border-gray-300 rounded-sm p-1"
-                  placeholder="Search..."
-                  value={dataSearch}
-                  onChange={handleDataSearch}
-                />
+                <h1 className="text-3xl font-bold bg-linear-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                  Inventory Management
+                </h1>
+                <p className="text-gray-600 mt-2">
+                  Monitor stock levels, track inventory movements, and manage
+                  your products efficiently
+                </p>
               </div>
-              <div className="flex flex-row space-x-4">
-                <select
-                  name=""
-                  id=""
-                  className="border border-gray-300 rounded-sm p-1 text-gray-600"
-                  value={categorySearch}
-                  onChange={(e) => dispatch(setCategorySearch(e.target.value))}
-                >
-                  <option value="">Filter by Category</option>
-                  <option value="electronics">Electronics</option>
-                  <option value="furniture">Furniture</option>
-                  <option value="clothing">Clothing</option>
-                  <option value="toys">Toys</option>
-                  <option value="books">Books</option>
-                </select>
-                <select
-                  name=""
-                  id=""
-                  className="border border-gray-300 rounded-sm p-1 text-gray-600"
-                >
-                  <option value="">Filter by Warehouse:</option>
-                  <option value="">Pluto</option>
-                  <option value="">Mars</option>
-                  <option value="">Earth</option>
-                  <option value="">Venus</option>
-                </select>
-                <button
-                  className="border flex items-center p-2 border-gray-300 text-gray-600 cursor-pointer rounded-sm"
-                  onClick={handleAddInventoryClick}
-                >
+              <div className="flex items-center space-x-4">
+                <button className="flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200">
                   <svg
-                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5 mr-2"
                     fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
                     stroke="currentColor"
-                    className="size-5"
+                    viewBox="0 0 24 24"
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      d="M12 4.5v15m7.5-7.5h-15"
+                      strokeWidth={2}
+                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  Export
+                </button>
+                <button
+                  onClick={handleAddInventoryClick}
+                  className="flex items-center px-4 py-2 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                     />
                   </svg>
                   Add Inventory
                 </button>
               </div>
             </div>
-            <div className="overflow-x-auto mt-4">
-              <table className="mt-4 min-w-full border-collapse flex flex-col gap-y-2 h-[80vh]">
-                <thead>
-                  <tr>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Item SKU
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Product Name
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Category
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Warehouse Location
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Rack Location
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Quantity in Stock
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Reorder Level
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Unit of Measure
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Cost per Unit
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Total Value
-                    </th>
-                    <th className="text-left text-gray-700 pb-2 text-sm px-6 min-w-[200px]">
-                      Last Restocked
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {inventoryLoading && (
-                    <tr>
-                      <td colSpan={9} className="text-center py-8">
-                        <h1 className="text-lg text-gray-600">Loading...</h1>
-                      </td>
-                    </tr>
-                  )}
-                  {inventoryError && (
-                    <tr>
-                      <td colSpan={9} className="text-center py-8">
-                        <h1 className="text-lg text-red-600">
-                          Error loading inventory data.
-                        </h1>
-                      </td>
-                    </tr>
-                  )}
-                  {/* Show filtered results based on search and category filters */}
-                  {(() => {
-                    // Priority: 1. Search results, 2. Category results, 3. All inventory
-                    let displayItems = [];
+          </div>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="bg-linear-to-br from-white to-green-50 rounded-2xl shadow-sm border border-green-200/50 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    Total Inventory Value
+                  </p>
+                  <p className="text-3xl font-bold bg-linear-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
+                    &#8369;{formatted}
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    ↗ +12.5% from last month
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-linear-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="bg-linear-to-br from-white to-blue-50 rounded-2xl shadow-sm border border-blue-200/50 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    In Stock Items
+                  </p>
+                  <p className="text-3xl font-bold bg-linear-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                    {inventoryData?.inStockItems}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    ↗ Available items
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="bg-linear-to-br from-white to-amber-50 rounded-2xl shadow-sm border border-amber-200/50 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    Low Stock Items
+                  </p>
+                  <p className="text-3xl font-bold bg-linear-to-r from-amber-600 to-amber-700 bg-clip-text text-transparent">
+                    {inventoryData?.lowStockItems}
+                  </p>
+                  <p className="text-xs text-amber-600 mt-1">
+                    ⚠ Requires attention
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-linear-to-br from-amber-500 to-amber-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+            <div className="bg-linear-to-br from-white to-red-50 rounded-2xl shadow-sm border border-red-200/50 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600 mb-1">
+                    No Stock Items
+                  </p>
+                  <p className="text-3xl font-bold bg-linear-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
+                    {inventoryData?.outOfStockItems}
+                  </p>
+                  <p className="text-xs text-red-600 mt-1">
+                    🚨 Critical shortage
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-linear-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Search and Filter Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200/50 p-6 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0 lg:space-x-6">
+              {/* Search Input */}
+              <div className="relative flex-1 max-w-md">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
+                  placeholder="Search inventory items..."
+                  value={dataSearch}
+                  onChange={handleDataSearch}
+                />
+              </div>
+              {/* Filters and Actions */}
+              <div className="flex flex-wrap items-center gap-3">
+                <select
+                  className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-gray-700 min-w-40"
+                  value={categorySearch}
+                  onChange={(e) => dispatch(setCategorySearch(e.target.value))}
+                >
+                  <option value="">All Categories</option>
+                  <option value="electronics">Electronics</option>
+                  <option value="furniture">Furniture</option>
+                  <option value="clothing">Clothing</option>
+                  <option value="toys">Toys</option>
+                  <option value="books">Books</option>
+                </select>
 
-                    if (debouncedSearchTerm && searchData?.itemBySearchTerm) {
-                      displayItems = searchData.itemBySearchTerm;
-                    } else if (
-                      debouncedCategorySearch &&
-                      categoryData?.itemByCategory
-                    ) {
-                      displayItems = categoryData.itemByCategory;
-                    } else {
-                      displayItems = inventoryData?.inventoryItems || [];
-                    }
-                    return displayItems.map((item) => (
-                      <tr
-                        key={item.id}
-                        className="hover:bg-gray-100 rounded-2xl divide-y divide-gray-200"
-                      >
-                        <td className="text-left text-gray-500 text-sm font-medium px-6 min-w-[200px]">
-                          {item.itemSKU}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.productName}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.category}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.warehouseLocation}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.rackLocation}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px] ">
-                          {item.quantityInStock}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.reorderLevel}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.unitOfMeasure}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.costPerUnit}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {item.totalValue}
-                        </td>
-                        <td className="text-left text-gray-500 text-sm py-2 font-medium px-6 min-w-[200px]">
-                          {FormatDate(item.lastRestocked)}
-                        </td>
+                <select
+                  className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white text-gray-700 min-w-40"
+                  value={warehouseSearch}
+                  onChange={(e) => dispatch(setWarehouseSearch(e.target.value))}
+                >
+                  <option value="">All Warehouses</option>
+                  <option value="pluto">Pluto Warehouse</option>
+                  <option value="mars">Mars Warehouse</option>
+                  <option value="earth">Earth Warehouse</option>
+                  <option value="venus">Venus Warehouse</option>
+                </select>
+
+                <button
+                  className="flex items-center px-4 py-3 bg-linear-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 focus:ring-4 focus:ring-blue-200 transition-all duration-200 shadow-md hover:shadow-lg"
+                  onClick={handleAddInventoryClick}
+                >
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4v16m8-8H4"
+                    />
+                  </svg>
+                  Add Item
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Inventory Table Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200/50 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Inventory Items
+              </h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Manage your product inventory and stock levels
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <div className="inline-block min-w-full align-middle">
+                <div className="overflow-hidden">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-32">
+                          Item SKU
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-48">
+                          Product Name
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-32">
+                          Category
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-40">
+                          Warehouse Location
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-36">
+                          Quantity in Stock
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-32">
+                          Reorder Level
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-32">
+                          Unit of Measure
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-32">
+                          Cost per Unit
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-32">
+                          Total Value
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-36">
+                          Last Restocked
+                        </th>
+                        <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider min-w-28">
+                          Actions
+                        </th>
                       </tr>
-                    ));
-                  })()}
-                </tbody>
-              </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {inventoryLoading && (
+                        <tr>
+                          <td colSpan={11} className="px-6 py-12 text-center">
+                            <div className="flex flex-col items-center">
+                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                              <p className="text-lg text-gray-600 mt-4">
+                                Loading inventory data...
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {inventoryError && (
+                        <tr>
+                          <td colSpan={11} className="px-6 py-12 text-center">
+                            <div className="flex flex-col items-center">
+                              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                                <svg
+                                  className="w-6 h-6 text-red-600"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                  />
+                                </svg>
+                              </div>
+                              <p className="text-lg text-red-600">
+                                Error loading inventory data
+                              </p>
+                              <p className="text-sm text-gray-500 mt-1">
+                                Please try refreshing the page
+                              </p>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                      {/* Show filtered results based on search and category filters */}
+                      {(() => {
+                        // Priority: 1. Search results, 2. Category results, 3. Warehouse results, 4. All inventory
+                        let displayItems = [];
+
+                        if (
+                          debouncedSearchTerm &&
+                          searchData?.itemBySearchTerm
+                        ) {
+                          displayItems = searchData.itemBySearchTerm;
+                        } else if (
+                          debouncedCategorySearch &&
+                          categoryData?.itemByCategory
+                        ) {
+                          displayItems = categoryData.itemByCategory;
+                        } else if (
+                          debouncedWarehouseSearch &&
+                          warehouseCategoryData?.itemByWarehouseLocation
+                        ) {
+                          displayItems =
+                            warehouseCategoryData.itemByWarehouseLocation;
+                        } else {
+                          displayItems = inventoryData?.inventoryItems || [];
+                        }
+                        return displayItems.map((item, index) => (
+                          <tr
+                            key={item.id}
+                            className={`hover:bg-gray-50 transition-colors duration-150 ${
+                              index % 2 === 0 ? "bg-white" : "bg-gray-50/30"
+                            }`}
+                          >
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                              <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">
+                                {item.itemSKU}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                              {item.productName}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              <span className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-0.5 rounded-full capitalize">
+                                {item.category}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {item.warehouseLocation}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
+                              <div className="flex items-center">
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                    item.quantityInStock <= item.reorderLevel
+                                      ? "bg-red-100 text-red-800"
+                                      : item.quantityInStock <=
+                                        item.reorderLevel * 2
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : "bg-green-100 text-green-800"
+                                  }`}
+                                >
+                                  {item.quantityInStock}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {item.reorderLevel}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {item.unitOfMeasure}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 font-medium">
+                              &#8369;{item.costPerUnit?.toFixed(2)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900 font-semibold">
+                              &#8369;{item.totalValue?.toFixed(2)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {FormatDate(item.lastRestocked)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-500">
+                              <div className="flex items-center space-x-2">
+                                <button className="text-blue-600 hover:text-blue-900 hover:bg-blue-50 p-2 rounded-lg transition-all duration-150">
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                    />
+                                  </svg>
+                                </button>
+                                <button className="text-red-600 hover:text-red-900 hover:bg-red-50 p-2 rounded-lg transition-all duration-150">
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ));
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
