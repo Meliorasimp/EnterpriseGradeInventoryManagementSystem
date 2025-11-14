@@ -19,22 +19,123 @@ const Landingpage = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <Landingpagenavbar />
-      <section className="h-[80vh] w-9/11 flex mt-10 justify-center mx-auto">
-        <div className="w-1/2 h-full flex flex-col justify-center">
-          <h1 className=" text-4xl font-semibold ">Welcome to Quantify</h1>
-          <h2 className="text-xl text-gray-400 mt-4">
-            Your one-stop solution for an Enterprise-Grade inventory management
-          </h2>
-          <button
-            className="mt-6 w-1/2 rounded-2xl bg-lime-500 text-white py-2 px-4 cursor-pointer hover:bg-lime-600 transition duration-300"
-            onClick={handleGetStartedClick}
-          >
-            Get Started
-          </button>
+    <div
+      className="min-h-screen relative overflow-hidden"
+      style={{
+        background:
+          "linear-gradient(135deg, #ffffff 0%, #f7fee7 30%, #ecfdf5 70%, #ffffff 100%)",
+      }}
+    >
+      {/* Decorative background elements */}
+      <div className="absolute top-0 left-0 w-full h-full opacity-10 -z-10">
+        <div className="absolute top-32 left-10 w-72 h-72 bg-lime-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div className="absolute top-52 right-20 w-72 h-72 bg-green-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-700"></div>
+        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+      </div>
+
+      <div className="relative z-50">
+        <Landingpagenavbar />
+      </div>
+
+      <section className="relative h-[80vh] flex items-center justify-center px-6">
+        <div className="max-w-7xl w-full mx-auto grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left Content */}
+          <div className="space-y-8 text-center lg:text-left">
+            {/* Badge */}
+            <div className="inline-flex items-center px-4 py-2 bg-white/80 backdrop-blur-sm rounded-full border border-lime-200 shadow-lg">
+              <span className="w-2 h-2 bg-lime-500 rounded-full mr-2 animate-pulse"></span>
+              <span className="text-sm font-medium text-lime-700">
+                Enterprise-Grade Solution
+              </span>
+            </div>
+
+            {/* Main Heading */}
+            <div className="space-y-4">
+              <h1 className="text-5xl lg:text-6xl xl:text-7xl font-bold leading-tight">
+                <span className="text-gray-900">Welcome to</span>
+                <br />
+                <span className="bg-linear-to-r from-lime-500 via-green-500 to-emerald-500 bg-clip-text text-transparent">
+                  Quantify
+                </span>
+              </h1>
+
+              <p className="text-xl lg:text-2xl text-gray-600 max-w-xl mx-auto lg:mx-0 leading-relaxed">
+                Your one-stop solution for{" "}
+                <span className="font-semibold text-lime-600">
+                  Enterprise-Grade
+                </span>{" "}
+                inventory management
+              </p>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <button
+                className="group relative px-8 py-4 bg-linear-to-r from-lime-500 to-lime-600 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
+                onClick={handleGetStartedClick}
+              >
+                <span className="relative z-10">Get Started Free</span>
+                <div className="absolute inset-0 bg-linear-to-r from-lime-600 to-lime-700 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </button>
+
+              <button className="px-8 py-4 bg-white/80 backdrop-blur-sm text-gray-700 font-semibold rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl hover:bg-white transition-all duration-300">
+                Watch Demo
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="flex justify-center lg:justify-start space-x-8 pt-8">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">500+</div>
+                <div className="text-sm text-gray-600">Companies</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">99.9%</div>
+                <div className="text-sm text-gray-600">Uptime</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">50M+</div>
+                <div className="text-sm text-gray-600">Items Tracked</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Visual Element */}
+          <div className="relative hidden lg:block">
+            <div className="relative w-full h-96">
+              {/* Main card */}
+              <div className="absolute top-0 right-0 w-80 h-64 bg-white rounded-2xl shadow-2xl p-6 transform rotate-6 hover:rotate-3 transition-transform duration-500">
+                <div className="flex items-center mb-4">
+                  <div className="w-3 h-3 bg-red-400 rounded-full mr-2"></div>
+                  <div className="w-3 h-3 bg-yellow-400 rounded-full mr-2"></div>
+                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                </div>
+                <h3 className="font-semibold text-gray-800 mb-3">
+                  Inventory Dashboard
+                </h3>
+                <div className="space-y-2">
+                  <div className="h-2 bg-lime-200 rounded-full w-full"></div>
+                  <div className="h-2 bg-lime-300 rounded-full w-3/4"></div>
+                  <div className="h-2 bg-lime-400 rounded-full w-1/2"></div>
+                </div>
+              </div>
+
+              {/* Secondary card */}
+              <div className="absolute bottom-0 left-0 w-72 h-48 bg-linear-to-br from-lime-50 to-green-50 rounded-2xl shadow-xl p-5 transform -rotate-6 hover:-rotate-3 transition-transform duration-500">
+                <h4 className="font-medium text-gray-700 mb-3">
+                  Real-time Analytics
+                </h4>
+                <div className="flex items-end space-x-1 h-16">
+                  <div className="w-4 bg-lime-300 rounded-t h-8"></div>
+                  <div className="w-4 bg-lime-400 rounded-t h-12"></div>
+                  <div className="w-4 bg-lime-500 rounded-t h-16"></div>
+                  <div className="w-4 bg-lime-400 rounded-t h-10"></div>
+                  <div className="w-4 bg-lime-300 rounded-t h-14"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="w-1/2 h-full"></div>
       </section>
       {/* About Section */}
       <section className="py-20 bg-gray-50">

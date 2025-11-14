@@ -27,6 +27,7 @@ const StorageLocations = () => {
   const storageLocation = useSelector(
     (state: RootState) => state.interaction.isStorageLocationModalOpen
   );
+  console.log("Storage location Data:", storageLocationData);
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />

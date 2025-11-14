@@ -27,5 +27,16 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
         throw new GraphQLException($"Error fetching storage locations: {ex.Message}");
       }
     }
+
+    /*public int GetAverageUtilizationStatus([Service] ApplicationDbContext context)
+    {
+      foreach(var location in context.StorageLocations)
+      {
+        int totalMaxCapacity = location.MaxCapacity;
+        int usedCapacity = location.OccupiedCapacity;
+        if (totalMaxCapacity == 0) continue; // Avoid division by zero
+        int averageUtilization = usedCapacity / totalMaxCapacity * 100;
+      }
+    } */
   }
 }

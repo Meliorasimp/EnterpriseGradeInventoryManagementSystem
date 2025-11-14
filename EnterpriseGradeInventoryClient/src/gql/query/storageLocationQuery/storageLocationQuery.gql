@@ -19,4 +19,9 @@ query GetAllStorageLocations {
       email
     }
   }
+  averageUtilizationStatus
+  totalLocations
+  availableSpace
+  averageUtilization
+  capacityAlert
 }
