@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import AddStorageLocationMutation from "../gql/mutations/storageLocationMutation.gql";
 import GetWarehousesQuery from "../gql/query/warehouseQuery/warehouseQuery.gql";
+import AllStorageLocation from "../gql/query/storageLocationQuery/storageLocationQuery.gql";
 import type { WarehouseNameType } from "../types/warehouse";
 
 const AddStorageLocationModal = () => {
@@ -28,6 +29,12 @@ const AddStorageLocationModal = () => {
   const [addStorageLocation, { loading }] = useMutation(
     AddStorageLocationMutation,
     {
+      //Refetch storage locations data after adding a new one (Hydration purpose)
+      refetchQueries: [
+        {
+          query: AllStorageLocation,
+        },
+      ],
       onCompleted: () => {
         toast.success("Storage location added successfully!");
         handleClose();

@@ -1,5 +1,5 @@
-query GetAllStorageLocations {
-  allStorageLocations {
+query GetStorageLocationWarehouse($warehouseName: String!) {
+  storageLocationWarehouse(warehouseName: $warehouseName) {
     id
     locationCode
     maxCapacity
@@ -20,11 +20,4 @@ query GetAllStorageLocations {
       email
     }
   }
-  totalLocations
-  availableSpace
-  averageUtilizationStatus
-  capacityAlert
-  totalCapacity
-  totalOccupiedCapacity
-  totalAvailableSpace
 }

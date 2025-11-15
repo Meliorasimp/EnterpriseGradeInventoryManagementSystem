@@ -12,6 +12,7 @@ export interface StorageLocationResponseType {
   id: number;
   locationCode: string;
   maxCapacity: number;
+  occupiedCapacity: number;
   unitType: string;
   storageType: string;
   sectionName: string;
@@ -31,4 +32,24 @@ export interface StorageLocationResponseType {
 
 export interface StorageLocationQueryResponse {
   allStorageLocations: StorageLocationResponseType[];
+  totalLocations: number;
+  availableSpace: number;
+  averageUtilizationStatus: number;
+  capacityAlert: number;
+  totalCapacity: number;
+  totalOccupiedCapacity: number;
+  totalAvailableSpace: number;
+}
+
+export interface StorageLocationSearchResponse {
+  storageLocationSearch: StorageLocationResponseType[];
+}
+
+export interface StorageLocationWarehouseResponse {
+  storageLocationWarehouse: StorageLocationResponseType;
+}
+
+export interface StorageLocationSearch {
+  searchTerm?: string;
+  warehouseName?: string;
 }

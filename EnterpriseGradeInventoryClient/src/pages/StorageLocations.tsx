@@ -5,7 +5,18 @@ import type { RootState } from "../store";
 import { lazy, Suspense } from "react";
 import { useQuery } from "@apollo/client/react";
 import AllStorageLocation from "../gql/query/storageLocationQuery/storageLocationQuery.gql";
-import type { StorageLocationQueryResponse } from "../types/storagelocation";
+import GetAllWarehouse from "../gql/query/warehouseQuery/warehouseQuery.gql";
+import useDebounce from "../hooks/useDebounce";
+import type {
+  StorageLocationQueryResponse,
+  StorageLocationResponseType,
+  StorageLocationSearchResponse,
+  StorageLocationWarehouseResponse,
+} from "../types/storagelocation";
+import type { WarehouseNameType } from "../types/warehouse";
+import { setSearchTerm, setWarehouseName } from "../store/locationStorageSlice";
+import GetStorageLocationSearch from "../gql/query/storageLocationQuery/storageLocationSearchQuery.gql";
+import GetStorageLocationWarehouseSearch from "../gql/query/storageLocationQuery/storageLocationWarehouseQuery.gql";
 const StorageLocationModal = lazy(
   () => import("../components/AddStorageLocationModal")
 );
@@ -16,18 +27,52 @@ const StorageLocations = () => {
   const handleStorageLocationAdd = () => {
     dispatch(setIsStorageLocationModalOpen(true));
   };
-  const {
-    data: storageLocationData,
-    loading,
-    error,
-  } = useQuery<StorageLocationQueryResponse>(AllStorageLocation);
-  console.log("Fetched Storage Locations:", storageLocationData);
-  console.log("Loading:", loading);
-  console.log("Error:", error);
+  const searchData = useSelector(
+    (state: RootState) => state.locationStorageSearch.searchTerm
+  );
+  const categorySearchData = useSelector(
+    (state: RootState) => state.locationStorageSearch.warehouseName
+  );
+  const debouncedSearchTerm = useDebounce(searchData, 500);
+  const debouncedCategoryTerm = useDebounce(categorySearchData, 500);
+
+  const { data: storageLocationSearchData } =
+    useQuery<StorageLocationSearchResponse>(GetStorageLocationSearch, {
+      variables: { searchTerm: debouncedSearchTerm },
+      skip: !debouncedSearchTerm,
+    });
+
+  const { data: warehouseSearchData } =
+    useQuery<StorageLocationWarehouseResponse>(
+      GetStorageLocationWarehouseSearch,
+      {
+        variables: { warehouseName: debouncedCategoryTerm },
+        skip: !debouncedCategoryTerm,
+      }
+    );
+
+  // Fetch storage locations data
+  const { data: storageLocationData } = useQuery<StorageLocationQueryResponse>(
+    AllStorageLocation,
+    {
+      //Always fetch fresh data from the server
+      fetchPolicy: "network-only",
+      nextFetchPolicy: "network-only",
+      notifyOnNetworkStatusChange: true,
+    }
+  );
+  // Fetch All warehouses data
+  const { data: warehouseData } = useQuery<WarehouseNameType>(GetAllWarehouse, {
+    //Always fetch fresh data from the server
+    fetchPolicy: "network-only",
+    nextFetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
+  });
+
   const storageLocation = useSelector(
     (state: RootState) => state.interaction.isStorageLocationModalOpen
   );
-  console.log("Storage location Data:", storageLocationData);
+
   return (
     <div className="flex h-screen overflow-hidden">
       <Navbar />
@@ -89,15 +134,12 @@ const StorageLocations = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-linear-to-br from-white to-blue-50 rounded-2xl shadow-sm border border-blue-200/50 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="mt-1">
                   <p className="text-sm font-medium text-gray-600 mb-1">
                     Total Locations
                   </p>
                   <p className="text-3xl font-bold bg-linear-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                    247
-                  </p>
-                  <p className="text-xs text-green-600 mt-1">
-                    ↗ +12 this month
+                    {storageLocationData?.totalLocations ?? 0}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-linear-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -120,14 +162,13 @@ const StorageLocations = () => {
 
             <div className="bg-linear-to-br from-white to-green-50 rounded-2xl shadow-sm border border-green-200/50 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="mt-1">
                   <p className="text-sm font-medium text-gray-600 mb-1">
                     Available Space
                   </p>
                   <p className="text-3xl font-bold bg-linear-to-r from-green-600 to-green-700 bg-clip-text text-transparent">
-                    89%
+                    {storageLocationData?.availableSpace ?? 0}%
                   </p>
-                  <p className="text-xs text-green-600 mt-1">↗ +2% this week</p>
                 </div>
                 <div className="w-12 h-12 bg-linear-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
                   <svg
@@ -149,15 +190,12 @@ const StorageLocations = () => {
 
             <div className="bg-linear-to-br from-white to-orange-50 rounded-2xl shadow-sm border border-orange-200/50 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
               <div className="flex items-center justify-between">
-                <div>
+                <div className="mt-1">
                   <p className="text-sm font-medium text-gray-600 mb-1">
                     Avg Utilization
                   </p>
                   <p className="text-3xl font-bold bg-linear-to-r from-orange-600 to-orange-700 bg-clip-text text-transparent">
-                    76%
-                  </p>
-                  <p className="text-xs text-orange-600 mt-1">
-                    ↗ +5% this week
+                    {storageLocationData?.averageUtilizationStatus ?? 0}%
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-linear-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -185,9 +223,8 @@ const StorageLocations = () => {
                     Capacity Alerts
                   </p>
                   <p className="text-3xl font-bold bg-linear-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
-                    3
+                    {storageLocationData?.capacityAlert ?? 0}
                   </p>
-                  <p className="text-xs text-red-600 mt-1">Needs attention</p>
                 </div>
                 <div className="w-12 h-12 bg-linear-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg">
                   <svg
@@ -230,19 +267,20 @@ const StorageLocations = () => {
                     type="text"
                     className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-64"
                     placeholder="Search locations..."
+                    value={searchData}
+                    onChange={(e) => dispatch(setSearchTerm(e.target.value))}
                   />
                 </div>
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600">
+                <select
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600"
+                  onChange={(e) => dispatch(setWarehouseName(e.target.value))}
+                >
                   <option value="">All Warehouses</option>
-                  <option value="warehouse-1">Manila Central</option>
-                  <option value="warehouse-2">Cebu Distribution</option>
-                  <option value="warehouse-3">Davao Logistics</option>
-                </select>
-                <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-600">
-                  <option value="">All Status</option>
-                  <option value="available">Available</option>
-                  <option value="occupied">Occupied</option>
-                  <option value="maintenance">Maintenance</option>
+                  {warehouseData?.allWarehouses.map((warehouse) => (
+                    <option key={warehouse.id} value={warehouse.warehouseName}>
+                      {warehouse.warehouseName}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex items-center gap-2">
@@ -295,123 +333,415 @@ const StorageLocations = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {/* Sample Data */}
-                      {[
-                        {
-                          code: "A1-001",
-                          warehouse: "Manila Central",
-                          capacity: "1000 units",
-                          utilization: 85,
-                          status: "Occupied",
-                        },
-                        {
-                          code: "A2-045",
-                          warehouse: "Manila Central",
-                          capacity: "750 units",
-                          utilization: 92,
-                          status: "Near Full",
-                        },
-                        {
-                          code: "B1-012",
-                          warehouse: "Cebu Distribution",
-                          capacity: "500 units",
-                          utilization: 45,
-                          status: "Available",
-                        },
-                        {
-                          code: "C3-089",
-                          warehouse: "Davao Logistics",
-                          capacity: "1200 units",
-                          utilization: 78,
-                          status: "Occupied",
-                        },
-                        {
-                          code: "A3-156",
-                          warehouse: "Manila Central",
-                          capacity: "800 units",
-                          utilization: 15,
-                          status: "Available",
-                        },
-                      ].map((location, index) => (
-                        <tr
-                          key={index}
-                          className="hover:bg-gray-50 transition-colors"
-                        >
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                                <svg
-                                  className="w-4 h-4 text-blue-600"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                                  />
-                                </svg>
-                              </div>
-                              <div>
-                                <div className="text-sm font-medium text-gray-900">
-                                  {location.code}
+                      {/*{storageLocationData?.allStorageLocations.map(
+                        (location) => (
+                          <tr
+                            key={location.id}
+                            className="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-lg bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth="2"
+                                      stroke="currentColor"
+                                      className="w-5 h-5 text-white"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"
+                                      />
+                                    </svg>
+                                  </div>
                                 </div>
-                                <div className="text-sm text-gray-500">
-                                  Zone {location.code.split("-")[0]}
+                                <div className="ml-4">
+                                  <div className="text-sm font-semibold text-gray-900">
+                                    {location.locationCode}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Section {location.sectionName || "N/A"}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {location.warehouse}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {location.capacity}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <div className="w-16 h-2 bg-gray-200 rounded-full mr-2">
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="shrink-0 h-8 w-8">
+                                  <div className="h-8 w-8 rounded-full bg-linear-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-sm">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth="2"
+                                      stroke="currentColor"
+                                      className="w-4 h-4 text-white"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div className="ml-3">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {location.warehouse?.warehouseName || "N/A"}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center text-sm">
+                                {location.maxCapacity.toLocaleString()} units
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center text-sm">
+                                {(location.occupiedCapacity /
+                                  location.maxCapacity) *
+                                  100}
+                                %
+                              </div>
+                              <div className="bg-gray-300 h-2 rounded-full">
                                 <div
-                                  className={`h-2 rounded-full ${
-                                    location.utilization >= 90
-                                      ? "bg-red-500"
-                                      : location.utilization >= 75
-                                      ? "bg-yellow-500"
-                                      : "bg-green-500"
-                                  }`}
-                                  style={{ width: `${location.utilization}%` }}
+                                  className="bg-linear-to-r from-green-500 to-green-600 h-2 rounded-full"
+                                  style={{
+                                    width: `${
+                                      (location.occupiedCapacity /
+                                        location.maxCapacity) *
+                                      100
+                                    }%`,
+                                  }}
                                 ></div>
                               </div>
-                              <span className="text-sm text-gray-600">
-                                {location.utilization}%
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                location.status === "Available"
-                                  ? "bg-green-100 text-green-800"
-                                  : location.status === "Occupied"
-                                  ? "bg-blue-100 text-blue-800"
-                                  : "bg-yellow-100 text-yellow-800"
-                              }`}
-                            >
-                              {location.status}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button className="text-blue-600 hover:text-blue-900 mr-3">
-                              Edit
-                            </button>
-                            <button className="text-red-600 hover:text-red-900">
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center text-sm">
+                                {(() => {
+                                  const utilizationPercent =
+                                    (location.occupiedCapacity /
+                                      location.maxCapacity) *
+                                    100;
+                                  if (utilizationPercent >= 75) {
+                                    return (
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <svg
+                                          className="w-3 h-3 mr-1"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                        Near Full
+                                      </span>
+                                    );
+                                  } else if (utilizationPercent >= 50) {
+                                    return (
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <svg
+                                          className="w-3 h-3 mr-1"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                        Moderate
+                                      </span>
+                                    );
+                                  } else {
+                                    return (
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <svg
+                                          className="w-3 h-3 mr-1"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                        Available
+                                      </span>
+                                    );
+                                  }
+                                })()}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                  title="Edit Location"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="2"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                  title="Delete Location"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="2"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        )
+                      )} */}
+                      {(() => {
+                        let dataToRender: StorageLocationResponseType[] =
+                          storageLocationData?.allStorageLocations || [];
+
+                        if (
+                          storageLocationSearchData?.storageLocationSearch
+                            ?.length
+                        ) {
+                          dataToRender =
+                            storageLocationSearchData.storageLocationSearch;
+                        } else if (
+                          warehouseSearchData?.storageLocationWarehouse
+                        ) {
+                          dataToRender = [
+                            warehouseSearchData.storageLocationWarehouse,
+                          ];
+                        }
+
+                        return dataToRender.map((location) => (
+                          <tr
+                            key={location.id}
+                            className="hover:bg-gray-50 transition-colors duration-150"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-lg bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-sm">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth="2"
+                                      stroke="currentColor"
+                                      className="w-5 h-5 text-white"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21"
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-semibold text-gray-900">
+                                    {location.locationCode}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Section {location.sectionName || "N/A"}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="shrink-0 h-8 w-8">
+                                  <div className="h-8 w-8 rounded-full bg-linear-to-br from-purple-500 to-purple-600 flex items-center justify-center shadow-sm">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      strokeWidth="2"
+                                      stroke="currentColor"
+                                      className="w-4 h-4 text-white"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008z"
+                                      />
+                                    </svg>
+                                  </div>
+                                </div>
+                                <div className="ml-3">
+                                  <div className="text-sm font-medium text-gray-900">
+                                    {location.warehouse?.warehouseName || "N/A"}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center text-sm">
+                                {location.maxCapacity.toLocaleString()} units
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center text-sm">
+                                {Math.round(
+                                  (location.occupiedCapacity /
+                                    location.maxCapacity) *
+                                    100
+                                )}
+                                %
+                              </div>
+                              <div className="bg-gray-300 h-2 rounded-full mt-1">
+                                <div
+                                  className="bg-linear-to-r from-green-500 to-green-600 h-2 rounded-full"
+                                  style={{
+                                    width: `${
+                                      (location.occupiedCapacity /
+                                        location.maxCapacity) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center text-sm">
+                                {(() => {
+                                  const utilizationPercent =
+                                    (location.occupiedCapacity /
+                                      location.maxCapacity) *
+                                    100;
+                                  if (utilizationPercent >= 75) {
+                                    return (
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        <svg
+                                          className="w-3 h-3 mr-1"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                        Near Full
+                                      </span>
+                                    );
+                                  } else if (utilizationPercent >= 50) {
+                                    return (
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        <svg
+                                          className="w-3 h-3 mr-1"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                        Moderate
+                                      </span>
+                                    );
+                                  } else {
+                                    return (
+                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        <svg
+                                          className="w-3 h-3 mr-1"
+                                          fill="currentColor"
+                                          viewBox="0 0 20 20"
+                                        >
+                                          <path
+                                            fillRule="evenodd"
+                                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                            clipRule="evenodd"
+                                          />
+                                        </svg>
+                                        Available
+                                      </span>
+                                    );
+                                  }
+                                })()}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center space-x-2">
+                                <button
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors duration-200"
+                                  title="Edit Location"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="2"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+                                    />
+                                  </svg>
+                                </button>
+                                <button
+                                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                  title="Delete Location"
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth="2"
+                                    stroke="currentColor"
+                                    className="w-5 h-5"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ));
+                      })()}
                     </tbody>
                   </table>
                 </div>
@@ -431,13 +761,19 @@ const StorageLocations = () => {
                       Total Capacity
                     </span>
                     <span className="text-sm font-medium text-gray-900">
-                      15,250 units
+                      {(
+                        storageLocationData?.totalCapacity ?? 0
+                      ).toLocaleString()}{" "}
+                      units
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Used Capacity</span>
                     <span className="text-sm font-medium text-gray-900">
-                      11,590 units
+                      {(
+                        storageLocationData?.totalOccupiedCapacity ?? 0
+                      ).toLocaleString()}{" "}
+                      units
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -445,17 +781,25 @@ const StorageLocations = () => {
                       Available Space
                     </span>
                     <span className="text-sm font-medium text-green-600">
-                      3,660 units
+                      {(
+                        storageLocationData?.totalAvailableSpace ?? 0
+                      ).toLocaleString()}{" "}
+                      units
                     </span>
                   </div>
                   <div className="w-full h-3 bg-gray-200 rounded-full">
                     <div
                       className="h-3 bg-linear-to-r from-blue-500 to-blue-600 rounded-full"
-                      style={{ width: "76%" }}
+                      style={{
+                        width: `${
+                          storageLocationData?.averageUtilizationStatus ?? 0
+                        }%`,
+                      }}
                     ></div>
                   </div>
                   <div className="text-center text-sm text-gray-600">
-                    76% Utilized
+                    {storageLocationData?.averageUtilizationStatus ?? 0}%
+                    Utilized
                   </div>
                 </div>
               </div>
