@@ -46,7 +46,7 @@ export interface StorageLocationSearchResponse {
 }
 
 export interface StorageLocationWarehouseResponse {
-  storageLocationWarehouse: StorageLocationResponseType;
+  storageLocationWarehouse: StorageLocationResponseType[];
 }
 
 export interface StorageLocationSearch {

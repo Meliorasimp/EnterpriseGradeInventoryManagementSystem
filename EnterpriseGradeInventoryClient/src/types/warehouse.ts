@@ -21,3 +21,15 @@ export interface WarehouseNameType {
 export interface IndividualWarehouseType {
   warehouseName: string;
 }
+
+export interface OneWarehouseResponseType {
+  warehouse: {
+    id: number;
+    warehouseName: string;
+    warehouseCode: string;
+    address: string;
+    manager: string;
+    region: string;
+    status: string;
+  }[];
+}

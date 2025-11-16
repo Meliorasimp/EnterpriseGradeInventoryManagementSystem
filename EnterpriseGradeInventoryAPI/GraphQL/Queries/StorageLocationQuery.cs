@@ -5,6 +5,8 @@ using HotChocolate;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using HotChocolate.Types.Pagination;
+using StackExchange.Redis;
 
 namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
 {
@@ -30,8 +32,16 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
     }
 
     // Get average utilization status across all storage locations
-    public int GetAverageUtilizationStatus([Service] ApplicationDbContext context)
+    public async Task<int> GetAverageUtilizationStatus([Service] ApplicationDbContext context, [Service] IConnectionMultiplexer redis)
     {
+      var db = redis.GetDatabase();
+
+      var cached = await db.StringGetAsync("AverageUtilizationStatus");
+
+      if(!cached.IsNullOrEmpty)
+      {
+        return (int)cached;
+      }
       var location = context.StorageLocations.ToList();
       if (location.Count == 0)
       {
@@ -45,19 +55,36 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
       {
         return 0;
       }
-
-      return (int)Math.Round((double)totalCurrentCapacity / totalMaxCapacity * 100);
+      int averageUtilization = (int)Math.Round((double)totalCurrentCapacity / totalMaxCapacity * 100);
+      await db.StringSetAsync("AverageUtilizationStatus", averageUtilization, TimeSpan.FromSeconds(10));
+      return averageUtilization;
     }
 
     // Get total number of storage locations
-    public int GetTotalLocations ([Service] ApplicationDbContext context)
+    public async Task<int> GetTotalLocations ([Service] ApplicationDbContext context, [Service] IConnectionMultiplexer redis)
     {
-      return context.StorageLocations.Count();
-    }
+      var db = redis.GetDatabase();
+      var cached = await db.StringGetAsync("TotalLocations");
+
+      if(!cached.IsNullOrEmpty)
+      {
+        return (int)cached;
+      }
+      int count = context.StorageLocations.Count();
+      await db.StringSetAsync("TotalLocations", count, TimeSpan.FromSeconds(10));
+      return count;
+    } 
 
     // Get available space percentage across all storage locations
-    public int GetAvailableSpace([Service] ApplicationDbContext context)
+    public async Task<int> GetAvailableSpace([Service] ApplicationDbContext context, [Service] IConnectionMultiplexer redis)
     {
+      var db = redis.GetDatabase();
+      var cached = await db.StringGetAsync("AvailableSpace");
+
+      if(!cached.IsNullOrEmpty)
+      {
+        return (int)cached;
+      }
       var location = context.StorageLocations.ToList();
 
       int totalAvailableSpace = location.Sum(loc => loc.MaxCapacity - loc.OccupiedCapacity);
@@ -70,57 +97,102 @@ namespace EnterpriseGradeInventoryAPI.GraphQL.Queries
 
       double averageAvailableSpace = totalAvailableSpace / (double)totalMaxCapacity * 100;
 
+      await db.StringSetAsync("AvailableSpace", (int)Math.Round(averageAvailableSpace), TimeSpan.FromSeconds(10));
+
       return (int)Math.Round(averageAvailableSpace);
     }
 
     // Get count of storage locations that have reached or exceeded capacity
-    public int GetCapacityAlert([Service] ApplicationDbContext context)
+    public async Task<int> GetCapacityAlert([Service] ApplicationDbContext context, [Service] IConnectionMultiplexer redis)
     {
-      var alertCount = context.StorageLocations
-        .Count(sl => sl.OccupiedCapacity >= sl.MaxCapacity);
+      var db = redis.GetDatabase();
 
+      var cached = await db.StringGetAsync("CapacityAlert");
+      if(!cached.IsNullOrEmpty)
+      {
+        return (int)cached;
+      }
+      var location = context.StorageLocations.ToList();
+      int alertCount = location.Count(loc => loc.OccupiedCapacity >= loc.MaxCapacity);
+
+      await db.StringSetAsync("CapacityAlert", alertCount, TimeSpan.FromSeconds(10));
       return alertCount;
     }
 
     // Get total capacity across all storage locations
-    public int GetTotalCapacity([Service] ApplicationDbContext context)
+    public async Task<int> GetTotalCapacity([Service] ApplicationDbContext context, [Service] IConnectionMultiplexer redis)
     {
+      var db = redis.GetDatabase();
+
+      var cached = await db.StringGetAsync("TotalCapacity");
+
+      if(!cached.IsNullOrEmpty)
+      {
+        return (int)cached;
+      }
       var location = context.StorageLocations.ToList();
       int totalMaxCapacity = location.Sum(loc => loc.MaxCapacity);
+
+      await db.StringSetAsync("TotalCapacity", totalMaxCapacity, TimeSpan.FromSeconds(10));
       return totalMaxCapacity;
     }
 
     // Get total occupied capacity across all storage locations
-    public int GetTotalOccupiedCapacity([Service] ApplicationDbContext context)
+    public async Task<int> GetTotalOccupiedCapacity([Service] ApplicationDbContext context, [Service] IConnectionMultiplexer redis)
     {
+      var db = redis.GetDatabase();
+
+      var cached = await db.StringGetAsync("TotalOccupiedCapacity");
+
+      if(!cached.IsNullOrEmpty)
+      {
+        return (int)cached;
+      }
       var location = context.StorageLocations.ToList();
       int totalCurrentCapacity = location.Sum(loc => loc.OccupiedCapacity);
+      await db.StringSetAsync("TotalOccupiedCapacity", totalCurrentCapacity, TimeSpan.FromSeconds(10));
       return totalCurrentCapacity;
     }
     
     // Get total available space across all storage locations
-    public int GetTotalAvailableSpace([Service] ApplicationDbContext context)
+    public async Task<int> GetTotalAvailableSpace([Service] ApplicationDbContext context, [Service] IConnectionMultiplexer redis)
     {
-      var location = context.StorageLocations.ToList();
-      int totalMaxCapacity = location.Sum(loc => loc.MaxCapacity);
-      int totalCurrentCapacity = location.Sum(loc => loc.OccupiedCapacity);
-      return totalMaxCapacity - totalCurrentCapacity;
-    }
-    // Get storage location by warehouse name
-    public async Task<StorageLocation> GetStorageLocationWarehouse([Service] ApplicationDbContext context, string warehouseName)
-    {
-      var storageLocation = await context.StorageLocations
-        .Include(sl => sl.Warehouse)
-        .Include(sl => sl.User)
-        .Where(sl => sl.Warehouse != null && sl.Warehouse.WarehouseName == warehouseName)
-        .ToListAsync();
+        var db = redis.GetDatabase();
 
-      if (storageLocation.Count == 0)
+        var cached = await db.StringGetAsync("TotalAvailableSpace");
+
+        if(!cached.IsNullOrEmpty)
+        {
+          return (int)cached;
+        }
       {
-        throw new GraphQLException($"Storage location for warehouse '{warehouseName}' not found.");
-      }
+        var location = context.StorageLocations.ToList();
+        int totalMaxCapacity = location.Sum(loc => loc.MaxCapacity);
+        int totalCurrentCapacity = location.Sum(loc => loc.OccupiedCapacity);
+        int totalAvailableSpace = totalMaxCapacity - totalCurrentCapacity;
 
-      return storageLocation;
+        await db.StringSetAsync("TotalAvailableSpace", totalAvailableSpace, TimeSpan.FromSeconds(10));
+        return totalAvailableSpace;
+      }
+    }
+
+    // Get storage location by warehouse name
+    public async Task<List<StorageLocation>> GetStorageLocationWarehouse(
+    [Service] ApplicationDbContext context, 
+    string warehouseName)
+    {
+        var storageLocations = await context.StorageLocations
+            .Include(sl => sl.Warehouse)
+            .Include(sl => sl.User)
+            .Where(sl => sl.Warehouse != null && sl.Warehouse.WarehouseName == warehouseName)
+            .ToListAsync();
+
+        if (storageLocations.Count == 0)
+        {
+            throw new GraphQLException($"No storage locations found for warehouse '{warehouseName}'.");
+        }
+
+        return storageLocations;
     }
 
     //Get Storage Location by Search Term

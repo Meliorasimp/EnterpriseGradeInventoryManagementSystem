@@ -1,12 +1,18 @@
 using Microsoft.EntityFrameworkCore;
 using EnterpriseGradeInventoryAPI.Data;
 using DotNetEnv;
+using StackExchange.Redis;
+
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Configure Redis
+var redis = ConnectionMultiplexer.Connect("localhost:6379");
+builder.Services.AddSingleton<IConnectionMultiplexer>(redis);
 
 // Enable CORS for the client app (default Vite port 5173)
 builder.Services.AddCors(options =>

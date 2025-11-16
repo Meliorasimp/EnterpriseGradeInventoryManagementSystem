@@ -29,7 +29,11 @@ const Inventory = () => {
     data: inventoryData,
     loading: inventoryLoading,
     error: inventoryError,
-  } = useQuery<FetchInventoryResponse>(GetAllInventoryItems);
+  } = useQuery<FetchInventoryResponse>(GetAllInventoryItems, {
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "network-only",
+    notifyOnNetworkStatusChange: true,
+  });
 
   //Fetch Result from Searching Inventory
   const dataSearch = useSelector((state: RootState) => state.search.dataSearch);

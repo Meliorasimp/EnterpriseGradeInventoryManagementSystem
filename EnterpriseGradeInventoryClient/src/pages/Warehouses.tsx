@@ -5,8 +5,12 @@ import type { RootState } from "../store";
 import { lazy, Suspense } from "react";
 import { useQuery } from "@apollo/client/react";
 const Warehouse = lazy(() => import("../components/AddWarehouseModal"));
-import { type WarehouseNameType } from "../types/warehouse";
+import {
+  type WarehouseNameType,
+  type OneWarehouseResponseType,
+} from "../types/warehouse";
 import getAllWarehouse from "../gql/query/warehouseQuery/warehouseQuery.gql";
+import getWarehouse from "../gql/query/warehouseQuery/oneWarehouseQuery.gql";
 import { setWareHouse } from "../store/WarehouseSlice";
 
 const Warehouses = () => {
@@ -16,7 +20,17 @@ const Warehouses = () => {
     (state: RootState) => state.interaction
   );
 
-  useSelector((state: RootState) => state.individualWarehouse.warehouseName);
+  const warehouseName = useSelector(
+    (state: RootState) => state.individualWarehouse.warehouseName
+  );
+
+  const { data: oneWarehouseData } = useQuery<OneWarehouseResponseType>(
+    getWarehouse,
+    {
+      variables: { warehouseName: warehouseName },
+      skip: !warehouseName,
+    }
+  );
 
   const { data: warehouseQueryData } =
     useQuery<WarehouseNameType>(getAllWarehouse);
@@ -529,9 +543,12 @@ const Warehouses = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900">
-                        Manila Central Warehouse
+                        {oneWarehouseData?.warehouse?.[0]?.warehouseName ||
+                          "Main Warehouse"}
                       </h3>
-                      <p className="text-sm text-gray-600">WRH-001</p>
+                      <p className="text-sm text-gray-600">
+                        {oneWarehouseData?.warehouse?.[0]?.warehouseCode || ""}
+                      </p>
                     </div>
                   </div>
 
@@ -540,19 +557,25 @@ const Warehouses = () => {
                       <div>
                         <p className="text-sm text-gray-600">Location</p>
                         <p className="font-medium text-gray-900">
-                          Quezon City, NCR
+                          {oneWarehouseData?.warehouse?.[0]?.address || ""}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Manager</p>
                         <p className="font-medium text-gray-900">
-                          Juan Dela Cruz
+                          {oneWarehouseData?.warehouse?.[0]?.manager || ""}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Region</p>
+                        <p className="font-medium text-gray-900">
+                          {oneWarehouseData?.warehouse?.[0]?.region || ""}
                         </p>
                       </div>
                       <div>
                         <p className="text-sm text-gray-600">Status</p>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          Operational
+                          {oneWarehouseData?.warehouse?.[0]?.status || ""}
                         </span>
                       </div>
                     </div>
